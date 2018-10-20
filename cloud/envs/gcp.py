@@ -62,11 +62,11 @@ class TPU(env.Resource):
 
   @property
   def down_cmd(self):
-    return ["ctpu", f"--name={self.name}", "--noconf", "pause"]
+    return ["ctpu", f"--name={self.name}", "pause", "--noconf"]
 
   @property
   def delete_cmd(self):
-    return ["ctpu", f"--name={self.name}", "--noconf", "delete"]
+    return ["ctpu", f"--name={self.name}", "delete", "--noconf"]
 
 
 class TPUManager(env.ResourceManager):
