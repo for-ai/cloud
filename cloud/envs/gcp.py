@@ -82,14 +82,12 @@ class TPUManager(env.ResourceManager):
       name = random.sample(string.ascii_lowercase, length)
       name = self.instance.name + "-" + ''.join(name)
       if name not in self.names:
-        self.names.append(name)
         return name
 
   def new_ip(self):
     while True:
       ip = random.randint(1, 98)
       if ip not in self.ips:
-        self.ips.append(ip)
         return ip
 
   @property
@@ -112,10 +110,7 @@ class TPUManager(env.ResourceManager):
 
   def up(self, preemptible=True):
     super().up(preemptible=preemptible)
-    self.names.append(self.tmp_name)
-    self.ips.append(self.tmp_ip)
-
     tpu = TPU(name=self.tmp_name, ip=self.tmp_ip, preemptible=preemptible)
-    self.tpus.append(tpu)
+    self.resources.append(tpu)
 
     return tpu
