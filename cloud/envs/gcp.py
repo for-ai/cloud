@@ -62,11 +62,11 @@ class TPU(env.Resource):
 
   @property
   def down_cmd(self):
-    return ["ctpu", f"--name={self.name}", "down"]
+    return ["ctpu", f"--name={self.name}", "--noconf", "pause"]
 
   @property
   def delete_cmd(self):
-    return ["ctpu", f"--name={self.name}", "delete"]
+    return ["ctpu", f"--name={self.name}", "--noconf", "delete"]
 
 
 class TPUManager(env.ResourceManager):
@@ -115,6 +115,7 @@ class TPUManager(env.ResourceManager):
 
   def add(self, name):
     tpu = TPU(name=name, ip=None, preemptible=None)
+    self.resources.append(tpu)
     return tpu
 
   def up(self, preemptible=True):
