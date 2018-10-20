@@ -61,7 +61,7 @@ class TPU(env.Resource):
     return self._name
 
   def down(self):
-    utils.try_call(["ctpu", "down", "--name", self.name])
+    utils.try_call(["ctpu", "--name", self.name, "down"])
 
 
 class TPUManager(env.ResourceManager):
