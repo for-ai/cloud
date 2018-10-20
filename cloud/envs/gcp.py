@@ -60,8 +60,13 @@ class TPU(env.Resource):
   def name(self):
     return self._name
 
-  def down(self):
-    utils.try_call(["ctpu", "--name", self.name, "down"])
+  @property
+  def down_cmd(self):
+    return ["ctpu", f"--name={self.name}", "down"]
+
+  @property
+  def delete_cmd(self):
+    return ["ctpu", f"--name={self.name}", "delete"]
 
 
 class TPUManager(env.ResourceManager):

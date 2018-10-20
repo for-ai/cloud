@@ -38,8 +38,15 @@ class Resource(object):
   def down_cmd(self):
     raise NotImplementedError
 
+  @property
+  def delete_cmd(self):
+    raise NotImplementedError
+
   def down(self):
     utils.try_call(self.down_cmd)
+
+  def delete(self):
+    utils.try_call(self.delete_cmd)
 
 
 class ResourceManager(object):
@@ -69,6 +76,9 @@ class ResourceManager(object):
   @property
   def preemptible_flag(self):
     return ""
+
+  def add(self, *args, **kwargs):
+    raise NotImplementedError
 
   def up(self, preemptible=True):
     cmd = self.up_cmd
