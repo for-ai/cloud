@@ -113,6 +113,10 @@ class TPUManager(env.ResourceManager):
   def preemptible_flag(self):
     return "--preemptible"
 
+  def add(self, name):
+    tpu = TPU(name=name, ip=None, preemptible=None)
+    return tpu
+
   def up(self, preemptible=True):
     super().up(preemptible=preemptible)
     tpu = TPU(name=self.tmp_name, ip=self.tmp_ip, preemptible=preemptible)
