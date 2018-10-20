@@ -1,5 +1,9 @@
 # Cloud Utilities for Deep Learning ⛅️
 
+A very light-weight cloud management tool designed with deep learning applications in mind.
+
+This project is still a work in progress. We welcome all contributions, suggestions, and use-cases. Reach out to us over GitHub or at team@for.ai with ideas!
+
 ## Quickstart
 
 ### GPU
