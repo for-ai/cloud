@@ -29,20 +29,13 @@ class GCPInstance(env.Instance):
   def name(self):
     return utils.call(["hostname"])[1].strip()
 
-  def down(self):
-    utils.try_call(["gcloud", "compute", "instances", "stop", self.name])
+  @property
+  def down_cmd(self):
+    return ["gcloud", "compute", "instances", "stop", self.name]
 
-  def delete(self, confirm=True):
-    while confirm:
-      r = input("Are you sure you wish to delete this instance (y/[n]): ")
-
-      if r == "y":
-        break
-      elif r in ["n", ""]:
-        logging.info("Aborting deletion...")
-        return
-
-    utils.try_call(["gcloud", "compute", "instances", "delete", self.name])
+  @property
+  def delete_cmd(self):
+    return ["gcloud", "compute", "instances", "delete", self.name]
 
 
 class TPU(env.Resource):

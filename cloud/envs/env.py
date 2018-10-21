@@ -29,7 +29,16 @@ class Resource(object):
   def down(self):
     utils.try_call(self.down_cmd)
 
-  def delete(self):
+  def delete(self, confirm=True):
+    while confirm:
+      r = input("Are you sure you wish to delete this instance (y/[n]): ")
+
+      if r == "y":
+        break
+      elif r in ["n", ""]:
+        logging.info("Aborting deletion...")
+        return
+
     utils.try_call(self.delete_cmd)
     if self.manager:
       self.manager.remove(self)
@@ -64,10 +73,6 @@ class ResourceManager(object):
 
   def __get__(self, idx):
     return self.resources[idx]
-
-  @property
-  def name(self):
-    raise NotImplementedError
 
   @property
   def up_cmd(self):
