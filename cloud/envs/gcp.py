@@ -18,10 +18,6 @@ class GCPInstance(env.Instance):
 
     # Check for dependencies
     try:
-      utils.call(["ctpu", "version"])
-    except:
-      raise Exception("Missing commandline utility: ctpu")
-    try:
       utils.call(["gcloud", "--version"])
     except:
       raise Exception("Missing commandline utility: gcloud")
