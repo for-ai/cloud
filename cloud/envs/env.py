@@ -4,31 +4,11 @@ import traceback
 from cloud.envs import utils
 
 
-class Instance(object):
-
-  def __init__(self):
-    super().__init__()
-    self.resource_managers = []
-
-  def __del__(self):
-    for rm in self.resource_managers:
-      del rm
-
-  @property
-  def name(self):
-    raise NotImplementedError
-
-  def down(self):
-    raise NotImplementedError
-
-  def delete(self, confirm=True):
-    raise NotImplementedError
-
-
 class Resource(object):
 
-  def __init__(self):
+  def __init__(self, manager=None):
     super().__init__()
+    self.manager = manager
 
   @property
   def name(self):
@@ -38,8 +18,41 @@ class Resource(object):
   def down_cmd(self):
     raise NotImplementedError
 
+  @property
+  def delete_cmd(self):
+    raise NotImplementedError
+
+  @property
+  def usable(self):
+    return True
+
   def down(self):
     utils.try_call(self.down_cmd)
+
+  def delete(self, confirm=True):
+    while confirm:
+      r = input("Are you sure you wish to delete this instance (y/[n]): ")
+
+      if r == "y":
+        break
+      elif r in ["n", ""]:
+        logging.info("Aborting deletion...")
+        return
+
+    utils.try_call(self.delete_cmd)
+    if self.manager:
+      self.manager.remove(self)
+
+
+class Instance(Resource):
+
+  def __init__(self):
+    super().__init__()
+    self.resource_managers = []
+
+  def __del__(self):
+    for rm in self.resource_managers:
+      del rm
 
 
 class ResourceManager(object):
@@ -58,9 +71,8 @@ class ResourceManager(object):
         logging.error("Failed to shutdown resource: %s" % r)
         logging.error(traceback.format_exc())
 
-  @property
-  def name(self):
-    raise NotImplementedError
+  def __get__(self, idx):
+    return self.resources[idx]
 
   @property
   def up_cmd(self):
@@ -69,6 +81,24 @@ class ResourceManager(object):
   @property
   def preemptible_flag(self):
     return ""
+
+  def add(self, *args, **kwargs):
+    if len(args) == 1:
+      arg = args[0]
+      if isinstance(arg, self.resource_cls):
+        self.resources += [arg]
+        return arg
+
+    raise NotImplementedError
+
+  def remove(self, *args, **kwargs):
+    if len(args) == 1:
+      arg = args[0]
+      if isinstance(arg, self.resource_cls):
+        self.resources.remove(arg)
+        return
+
+    raise NotImplementedError
 
   def up(self, preemptible=True):
     cmd = self.up_cmd

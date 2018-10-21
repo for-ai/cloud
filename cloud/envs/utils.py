@@ -5,7 +5,7 @@ import subprocess
 
 def call(cmd):
   cp = subprocess.run(cmd, stdout=subprocess.PIPE)
-  return cp.returncode, cp.stdout
+  return cp.returncode, cp.stdout.decode("utf-8")
 
 
 def try_call(cmd, retry_count=5):
