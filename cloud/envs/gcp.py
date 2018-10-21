@@ -63,10 +63,9 @@ class TPU(env.Resource):
 
   @property
   def usable(self):
-    s, r = utils.call(["ctpu", f"--name={self.name}", "status"])
-    print(r)
-    print(re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(1))
-    return True
+    _, r = utils.call(["ctpu", f"--name={self.name}", "status"])
+    r = re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(1)
+    return r == "RUNNING"
 
   @property
   def down_cmd(self):
