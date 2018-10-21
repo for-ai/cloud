@@ -136,7 +136,7 @@ class TPUManager(env.ResourceManager):
     if len(args) == 1:
       arg = args[0]
       if isinstance(arg, str):
-        tpu = TPU(name=name)
+        tpu = TPU(name=arg)
         self.resources.append(tpu)
         return tpu
     return super().add(*args, **kwargs)
