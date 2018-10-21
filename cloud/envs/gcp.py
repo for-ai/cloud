@@ -56,7 +56,7 @@ class TPU(env.Resource):
     self._name = name
     details = self.details
     self.ip = details["ipAddress"]
-    self.preemptible = details["preemptible"]
+    self.preemptible = details["preemptible"] == "true"
 
   @property
   def name(self):
@@ -71,7 +71,6 @@ class TPU(env.Resource):
     for line in r:
       v = line.split(": ")
       if len(v) != 2:
-        print(line)
         continue
       k, v = v
       details[k.strip()] = v.strip()
@@ -97,6 +96,24 @@ class TPUManager(env.ResourceManager):
     super().__init__(instance, TPU)
 
   @property
+  def up_cmd(self):
+
+    def fn():
+      self.tmp_name = self.new_name()
+      self.tmp_ip = self.new_ip()
+      return [
+          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
+          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
+          "--network=default"
+      ]
+
+    return fn
+
+  @property
+  def preemptible_flag(self):
+    return "--preemptible"
+
+  @property
   def names(self):
     return [r.name for r in self.resources]
 
@@ -116,24 +133,6 @@ class TPUManager(env.ResourceManager):
       ip = random.randint(1, 98)
       if ip not in self.ips:
         return ip
-
-  @property
-  def up_cmd(self):
-
-    def fn():
-      self.tmp_name = self.new_name()
-      self.tmp_ip = self.new_ip()
-      return [
-          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
-          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
-          "--network=default"
-      ]
-
-    return fn
-
-  @property
-  def preemptible_flag(self):
-    return "--preemptible"
 
   def add(self, *args, **kwargs):
     if len(args) == 1:
