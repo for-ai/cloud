@@ -1,4 +1,5 @@
 import random
+import re
 import string
 import subprocess
 
@@ -30,7 +31,7 @@ class GCPInstance(env.Instance):
 
   @property
   def name(self):
-    return utils.call(["hostname"])[1].decode("utf-8").strip()
+    return utils.call(["hostname"])[1].strip()
 
   def down(self):
     utils.try_call(["gcloud", "compute", "instances", "stop", self.name])
@@ -64,6 +65,7 @@ class TPU(env.Resource):
   def usable(self):
     s, r = utils.call(["ctpu", f"--name={self.name}", "status"])
     print(r)
+    print(re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(0))
     return True
 
   @property
