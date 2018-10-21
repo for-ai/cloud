@@ -65,7 +65,7 @@ class TPU(env.Resource):
   def usable(self):
     s, r = utils.call(["ctpu", f"--name={self.name}", "status"])
     print(r)
-    print(re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(0))
+    print(re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(1))
     return True
 
   @property
