@@ -69,8 +69,11 @@ class TPU(env.Resource):
     r = r.split("\n")
     details = dict()
     for line in r:
-      print(line)
-      k, v = line.split(": ")
+      v = line.split(": ")
+      if len(v) != 2:
+        print(line)
+        continue
+      k, v = v
       details[k.strip()] = v.strip()
     return details
 
