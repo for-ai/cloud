@@ -51,8 +51,8 @@ class GCPInstance(env.Instance):
 
 class TPU(env.Resource):
 
-  def __init__(self, name):
-    super().__init__()
+  def __init__(self, name, manager=None):
+    super().__init__(manager=manager)
     self._name = name
     details = self.details
     self.ip = details["ipAddress"]
@@ -69,6 +69,7 @@ class TPU(env.Resource):
     r = r.split("\n")
     details = dict()
     for line in r:
+      print(line)
       k, v = line.split(": ")
       details[k.strip()] = v.strip()
     return details
@@ -131,10 +132,14 @@ class TPUManager(env.ResourceManager):
   def preemptible_flag(self):
     return "--preemptible"
 
-  def add(self, name):
-    tpu = TPU(name=name, ip=None, preemptible=None)
-    self.resources.append(tpu)
-    return tpu
+  def add(self, *args, **kwargs):
+    if len(args) == 1:
+      arg = args[0]
+      if isinstance(arg, str):
+        tpu = TPU(name=name)
+        self.resources.append(tpu)
+        return tpu
+    return super().add(*args, **kwargs)
 
   def up(self, preemptible=True):
     super().up(preemptible=preemptible)

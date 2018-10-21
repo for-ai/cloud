@@ -6,8 +6,9 @@ from cloud.envs import utils
 
 class Resource(object):
 
-  def __init__(self):
+  def __init__(self, manager=None):
     super().__init__()
+    self.manager = manager
 
   @property
   def name(self):
@@ -30,6 +31,8 @@ class Resource(object):
 
   def delete(self):
     utils.try_call(self.delete_cmd)
+    if self.manager:
+      self.manager.remove(self)
 
 
 class Instance(Resource):
@@ -59,6 +62,9 @@ class ResourceManager(object):
         logging.error("Failed to shutdown resource: %s" % r)
         logging.error(traceback.format_exc())
 
+  def __get__(self, idx):
+    return self.resources[idx]
+
   @property
   def name(self):
     raise NotImplementedError
@@ -72,6 +78,21 @@ class ResourceManager(object):
     return ""
 
   def add(self, *args, **kwargs):
+    if len(args) == 1:
+      arg = args[0]
+      if isinstance(arg, self.resource_cls):
+        self.resources += [arg]
+        return arg
+
+    raise NotImplementedError
+
+  def remove(self, *args, **kwargs):
+    if len(args) == 1:
+      arg = args[0]
+      if isinstance(arg, self.resource_cls):
+        self.resources.remove(arg)
+        return
+
     raise NotImplementedError
 
   def up(self, preemptible=True):
