@@ -51,29 +51,40 @@ class GCPInstance(env.Instance):
 
 class TPU(env.Resource):
 
-  def __init__(self, name, ip, preemptible):
+  def __init__(self, name):
     super().__init__()
     self._name = name
-    self.ip = ip
-    self.preemptible = preemptible
+    details = self.details
+    self.ip = details["ipAddress"]
+    self.preemptible = details["preemptible"]
 
   @property
   def name(self):
     return self._name
 
   @property
+  def details(self):
+    _, r = utils.call(
+        ["gcloud", "alpha", "compute", "tpus", "describe", self.name])
+    r = r.split("\n")
+    details = dict()
+    for line in r:
+      k, v = line.split(": ")
+      details[k.strip()] = v.strip()
+    return details
+
+  @property
   def usable(self):
-    _, r = utils.call(["ctpu", f"--name={self.name}", "status"])
-    r = re.search(r".*Cloud TPU:\s+(\w+)\n", r).group(1)
-    return r == "RUNNING"
+    details = self.details
+    return (details["state"] == "RUNNING" and details["health"] == "HEALTHY")
 
   @property
   def down_cmd(self):
-    return ["ctpu", f"--name={self.name}", "pause", "--noconf"]
+    return ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
 
   @property
   def delete_cmd(self):
-    return ["ctpu", f"--name={self.name}", "delete", "--noconf"]
+    return ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
 
 
 class TPUManager(env.ResourceManager):
@@ -127,7 +138,7 @@ class TPUManager(env.ResourceManager):
 
   def up(self, preemptible=True):
     super().up(preemptible=preemptible)
-    tpu = TPU(name=self.tmp_name, ip=self.tmp_ip, preemptible=preemptible)
+    tpu = TPU(name=self.tmp_name)
     self.resources.append(tpu)
 
     return tpu
