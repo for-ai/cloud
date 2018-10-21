@@ -61,6 +61,12 @@ class TPU(env.Resource):
     return self._name
 
   @property
+  def usable(self):
+    s, r = utils.call(["ctpu", f"--name={self.name}", "status"])
+    print(r)
+    return True
+
+  @property
   def down_cmd(self):
     return ["ctpu", f"--name={self.name}", "pause", "--noconf"]
 

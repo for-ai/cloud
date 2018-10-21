@@ -4,27 +4,6 @@ import traceback
 from cloud.envs import utils
 
 
-class Instance(object):
-
-  def __init__(self):
-    super().__init__()
-    self.resource_managers = []
-
-  def __del__(self):
-    for rm in self.resource_managers:
-      del rm
-
-  @property
-  def name(self):
-    raise NotImplementedError
-
-  def down(self):
-    raise NotImplementedError
-
-  def delete(self, confirm=True):
-    raise NotImplementedError
-
-
 class Resource(object):
 
   def __init__(self):
@@ -42,11 +21,26 @@ class Resource(object):
   def delete_cmd(self):
     raise NotImplementedError
 
+  @property
+  def usable(self):
+    return True
+
   def down(self):
     utils.try_call(self.down_cmd)
 
   def delete(self):
     utils.try_call(self.delete_cmd)
+
+
+class Instance(Resource):
+
+  def __init__(self):
+    super().__init__()
+    self.resource_managers = []
+
+  def __del__(self):
+    for rm in self.resource_managers:
+      del rm
 
 
 class ResourceManager(object):
