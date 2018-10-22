@@ -141,4 +141,7 @@ ResourceManager class for TPU accelerators.
 | :------- | :------- |
 | `names` | list of str, names of the managed TPUs |
 | `ips` | list of str, ips of the managed TPUs |
+| **methods** | **desc.** |
+| `__init__(instance)` | `instance`: the `cloud.GCPInstance` object operating this TPUManager  |
+
 
