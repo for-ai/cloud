@@ -4,7 +4,7 @@ from cloud.envs import utils
 
 
 @registry.register("aws")
-class AzureInstance(env.Instance):
+class AWSInstance(env.Instance):
 
   def __init__(self, config, **kwargs):
     super().__init__(**kwargs)

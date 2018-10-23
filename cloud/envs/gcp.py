@@ -95,24 +95,6 @@ class TPUManager(env.ResourceManager):
     super().__init__(instance, TPU)
 
   @property
-  def up_cmd(self):
-
-    def fn():
-      self.tmp_name = self.new_name()
-      self.tmp_ip = self.new_ip()
-      return [
-          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
-          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
-          "--network=default"
-      ]
-
-    return fn
-
-  @property
-  def preemptible_flag(self):
-    return "--preemptible"
-
-  @property
   def names(self):
     return [r.name for r in self.resources]
 
@@ -143,7 +125,20 @@ class TPUManager(env.ResourceManager):
     return super().add(*args, **kwargs)
 
   def up(self, preemptible=True):
-    super().up(preemptible=preemptible)
+
+    def cmd():
+      self.tmp_name = self.new_name()
+      self.tmp_ip = self.new_ip()
+      cmd = [
+          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
+          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
+          "--network=default"
+      ]
+      if preemptible:
+        cmd += ["--preemptible"]
+      return cmd
+
+    utils.try_call(cmd)
     tpu = TPU(name=self.tmp_name)
     self.resources.append(tpu)
 
