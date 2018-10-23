@@ -24,4 +24,4 @@ setup(
     ],
     keywords='deep learning cloud',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-    install_requires=['numpy'])
+    install_requires=['numpy', 'libcloud', 'toml'])

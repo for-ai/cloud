@@ -5,6 +5,9 @@ import subprocess
 
 import numpy as np
 
+from libcloud.compute.types import Provider
+from libcloud.compute.providers import get_driver
+
 from cloud.envs import env
 from cloud.envs import registry
 from cloud.envs import utils
@@ -13,8 +16,8 @@ from cloud.envs import utils
 @registry.register("gcp")
 class GCPInstance(env.Instance):
 
-  def __init__(self):
-    super().__init__()
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
 
     # Check for dependencies
     try:
@@ -26,16 +29,23 @@ class GCPInstance(env.Instance):
     self.resource_managers = [self.tpu]
 
   @property
+  def driver(self):
+    if getattr(self, '_driver', None) is None:
+      r = requests.get(
+          "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+          headers={"Metadata-Flavor": "Google"})
+      project_id = r.text
+      self._driver = get_driver(Provider.GCE)("", "", project_id)
+    return self._driver
+
+  @property
   def name(self):
-    return utils.call(["hostname"])[1].strip()
+    if getattr(self, '_name', None) is None:
+      self._name = utils.call(["hostname"])[1].strip()
+    return self._name
 
-  @property
-  def down_cmd(self):
-    return ["gcloud", "compute", "instances", "stop", self.name]
-
-  @property
-  def delete_cmd(self):
-    return ["gcloud", "compute", "instances", "delete", self.name]
+  def down(self):
+    return self.node.shut_down()
 
 
 class TPU(env.Resource):

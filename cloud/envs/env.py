@@ -15,19 +15,31 @@ class Resource(object):
     raise NotImplementedError
 
   @property
-  def down_cmd(self):
-    raise NotImplementedError
-
-  @property
-  def delete_cmd(self):
-    raise NotImplementedError
-
-  @property
   def usable(self):
     return True
 
   def down(self):
-    utils.try_call(self.down_cmd)
+    raise NotImplementedError
+
+  def delete(self, confirm=True):
+    raise NotImplementedError
+
+
+class Instance(Resource):
+
+  def __init__(self, manager=None, **kwargs):
+    super().__init__(manager=manager)
+    self.resource_managers = []
+    self.driver = driver
+    self.node = filter(lambda n: n.name == self.name,
+                       self.driver.list_nodes())[0]
+
+  @property
+  def driver(self):
+    raise NotImplementedError
+
+  def down(self):
+    return self.node.shut_down()
 
   def delete(self, confirm=True):
     while confirm:
@@ -39,20 +51,10 @@ class Resource(object):
         logging.info("Aborting deletion...")
         return
 
-    utils.try_call(self.delete_cmd)
     if self.manager:
       self.manager.remove(self)
 
-
-class Instance(Resource):
-
-  def __init__(self):
-    super().__init__()
-    self.resource_managers = []
-
-  def __del__(self):
-    for rm in self.resource_managers:
-      del rm
+    self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
 class ResourceManager(object):
@@ -63,24 +65,8 @@ class ResourceManager(object):
     self.resource_cls = resource_cls
     self.resources = []
 
-  def __del__(self):
-    for r in self.resources:
-      try:
-        r.down()
-      except Exception as e:
-        logging.error("Failed to shutdown resource: %s" % r)
-        logging.error(traceback.format_exc())
-
   def __get__(self, idx):
     return self.resources[idx]
-
-  @property
-  def up_cmd(self):
-    raise NotImplementedError
-
-  @property
-  def preemptible_flag(self):
-    return ""
 
   def add(self, *args, **kwargs):
     if len(args) == 1:
@@ -106,3 +92,19 @@ class ResourceManager(object):
       if callable(cmd):
         cmd = lambda c=cmd: c() + [self.preemptible_flag]
     utils.try_call(cmd)
+
+  def down(self):
+    for r in self.resources:
+      try:
+        r.down()
+      except Exception as e:
+        logging.error("Failed to shutdown resource: %s" % r)
+        logging.error(traceback.format_exc())
+
+  def delete(self):
+    for r in self.resources:
+      try:
+        r.delete()
+      except Exception as e:
+        logging.error("Failed to delete resource: %s" % r)
+        logging.error(traceback.format_exc())
