@@ -24,7 +24,7 @@ cloud.connect("gcp")
 while True:
   # train your model or w/e
 
-cloud.disconnect()  # stop the instance (does not delete instance)
+cloud.down()  # stop the instance (does not delete instance)
 ```
 
 ### TPU
@@ -41,7 +41,7 @@ with True:
   else:
     # train your model or w/e
     
-cloud.disconnect()  # release all resources, then stop the instance (does not delete instance)
+cloud.down()  # release all resources, then stop the instance (does not delete instance)
 ```
 
 ---
@@ -59,9 +59,11 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | **returns** | **desc.** |
 | cloud_env | a cloud.Instance.  |
 
-### cloud.disconnect()
-Destroys `cloud.instance`.
+### cloud.down()
+Calls `cloud.instance.down()`.
 
+### cloud.delete(confirm=True)
+Calls `cloud.instance.delete(confirm)`.
 
 ### cloud.Resource
 Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it. 
@@ -73,8 +75,8 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | `delete_cmd ` | list of str, command to delete this resource. Passed to subprocess.run |
 | `usable ` | bool, whether this resource is usable |
 | **methods** | **desc.** |
-| `down` | stop the resource. Note: this should not necessarily delete this resource |
-| `delete` | delete this resource |
+| `down()` | stop the resource. Note: this should not necessarily delete this resource |
+| `delete(confirm=True)` | delete this resource |
 
 ### cloud.Instance(Resource)
 
