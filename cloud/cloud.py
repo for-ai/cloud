@@ -14,5 +14,9 @@ def connect(arg):
                     " Please provide a string or Instance object.")
 
 
-def disconnect():
+def down():
   cloud.instance.down()
+  
+
+def delete(confirm=True):
+  cloud.instance.delete(confirm)
