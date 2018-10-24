@@ -71,7 +71,7 @@ class ResourceManager(object):
     self.resource_cls = resource_cls
     self.resources = []
 
-  def __get__(self, idx):
+  def __getitem__(self, idx):
     return self.resources[idx]
 
   def add(self, *args, **kwargs):
