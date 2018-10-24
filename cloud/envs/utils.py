@@ -26,7 +26,7 @@ def try_call(cmd, retry_count=5):
 
 
 def config_path():
-  path = os.environ.get(["CLOUD_CFG"])
+  path = os.environ.get("CLOUD_CFG")
   if path is not None and os.path.isfile(path):
     return path
 
