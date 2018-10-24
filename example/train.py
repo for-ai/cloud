@@ -9,8 +9,6 @@ from cloud import cloud
 from model import get_autoencoder
 from data import get_mnist
 
-tf.flags.DEFINE_string("config", "", "path to the cloud config file")
-
 
 def main():
   run_config = tf.contrib.learn.RunConfig(save_checkpoints_steps=1000)
@@ -63,6 +61,6 @@ def main():
 
 if __name__ == "main":
   FLAGS = tf.app.flags.FLAGS
-  cloud.connect(FLAGS.config)
+  cloud.connect()
   main()
   cloud.down()
