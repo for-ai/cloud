@@ -10,7 +10,7 @@ from cloud.envs.utils import config_path
 def connect(arg=None):
   if arg is None:
     with open(config_path(), "r") as cf:
-      config = toml.loads(cf)
+      config = toml.load(cf)
       provider = config.pop("provider").lower()
       cloud.instance = reg.retrieve(provider, config=config)
   elif isinstance(arg, Instance):
