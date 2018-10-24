@@ -57,7 +57,7 @@ def main():
   experiment.train_and_evaluate()
 
 
-if __name__ == "main":
+if __name__ == "__main__":
   FLAGS = tf.app.flags.FLAGS
   cloud.connect()
   main()
