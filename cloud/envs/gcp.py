@@ -80,13 +80,30 @@ class TPU(env.Resource):
     details = self.details
     return (details["state"] == "RUNNING" and details["health"] == "HEALTHY")
 
+  def down(self):
+    raise NotImplementedError
+
+  def delete(self, confirm=True):
+    raise NotImplementedError
+
   @property
   def down_cmd(self):
     return ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
 
-  @property
-  def delete_cmd(self):
-    return ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
+  def delete(self, confirm=True):
+    while confirm:
+      r = input("Are you sure you wish to delete this instance (y/[n]): ")
+
+      if r == "y":
+        break
+      elif r in ["n", ""]:
+        logging.info("Aborting deletion...")
+        return
+
+    if self.manager:
+      self.manager.remove(self)
+
+    utils.try_call(["gcloud", "alpha", "compute", "tpus", "delete", self.name])
 
 
 class TPUManager(env.ResourceManager):

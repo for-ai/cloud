@@ -23,3 +23,19 @@ def try_call(cmd, retry_count=5):
 
     raise Exception(
         f"Call to `{c}` failed {retry_count} times. Aborting. {out}")
+
+
+def config_path():
+  path = os.environ.get(["CLOUD_CFG"])
+  if path is not None and os.path.isfile(path):
+    return path
+
+  path = os.path.join(os.environ["HOME"], "cloud.toml")
+  if os.path.isfile(path):
+    return path
+
+  path = "/cloud.toml"
+  if os.path.isfile(path):
+    return path
+
+  return None

@@ -6,17 +6,24 @@ This project is still a work in progress. We welcome all contributions, suggesti
 
 ## Quickstart
 
-Install:
+### Install:
 
 ```
 git clone git@github.com:for-ai/cloud.git
 sudo pip install -e cloud
 ```
 
-### GPU
+### Config:
+
+See `configs/cloud.toml-*` for instructions on how to authenticate for each provider (Google Cloud, AWS EC2, and Azure).
+
+Place your completed configuration file (named `cloud.toml`) in either root `/` or `$HOME`. Otherwise, provide a full path to the file in `$CLOUD_CFG`.
+
+### Usage:
+#### GPU
 ```python
 import cloud
-cloud.connect("gcp")
+cloud.connect()
 
 # gpu instances have a dedicated GPU so we don't need to worry
 # about preemption or acquiring/releasing accelerators online.
@@ -27,17 +34,16 @@ while True:
 cloud.down()  # stop the instance (does not delete instance)
 ```
 
-### TPU
+#### TPU (Only on GCP)
 ```python
 import cloud
-cloud.connect("gcp")
+cloud.connect()
 
 tpu = cloud.instance.tpu.up(preemptible=True)  # acquire the accelerator
-# tpu contains info like the tpu's name location state etc.
-with True:
+while True:
   if not tpu.usable:
-    tpu.down()  # release the accelerator
-    tpu = cloud.instance.tpu.up(preemptible=True)  # acquire the accelerator
+    tpu.delete(async=True)  # release the accelerator in the background
+    tpu = cloud.instance.tpu.up(preemptible=True)  # acquire a new accelerator
   else:
     # train your model or w/e
     

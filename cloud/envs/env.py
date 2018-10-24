@@ -30,13 +30,17 @@ class Instance(Resource):
   def __init__(self, manager=None, **kwargs):
     super().__init__(manager=manager)
     self.resource_managers = []
-    self.driver = driver
-    self.node = filter(lambda n: n.name == self.name,
-                       self.driver.list_nodes())[0]
 
   @property
   def driver(self):
     raise NotImplementedError
+
+  @property
+  def node(self):
+    if getattr(self, '_node', None) is None:
+      self._node = filter(lambda n: n.name == self.name,
+                          self.driver.list_nodes())[0]
+    return self._node
 
   def down(self):
     return self.node.shut_down()

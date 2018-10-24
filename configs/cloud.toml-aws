@@ -1,0 +1,6 @@
+provider = "aws"
+
+# Instructions for finding your keys are here:
+# https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys
+access_key = "ACCESS_KEY"
+secret_key = "SECRET_KEY"

@@ -1,0 +1,6 @@
+provider = "azure"
+
+# Instructions for finding values for these fields are here:
+# https://libcloud.readthedocs.io/en/latest/compute/drivers/azure.html#generating-and-uploading-a-certificate-file-and-obtaining-subscription-id
+subscription_id = "SUBSCRIPTION_ID"
+key_file = "KEY_FILE"
