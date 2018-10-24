@@ -47,8 +47,8 @@ def main():
       model_dir="tmp/run",
       config=run_config)
 
-  estimator.train(100)
-  estimator.evaluate(10)
+  estimator.train(train_input_fn, steps=100)
+  estimator.evaluate(eval_input_fn, steps=10)
 
 
 if __name__ == "__main__":
