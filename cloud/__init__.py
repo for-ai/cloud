@@ -6,10 +6,10 @@ from cloud.envs.env import Resource
 from cloud.envs.env import ResourceManager
 
 from cloud.envs import aws
-from cloud.envs.gcp import AWSInstance
+from cloud.envs.aws import AWSInstance
 
 from cloud.envs import azure
-from cloud.envs.gcp import AzureInstance
+from cloud.envs.azure import AzureInstance
 
 from cloud.envs import gcp
 from cloud.envs.gcp import GCPInstance
