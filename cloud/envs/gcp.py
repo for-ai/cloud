@@ -1,3 +1,4 @@
+import logging
 import random
 import re
 import string
@@ -75,14 +76,15 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] == "RUNNING" and details["health"] == "HEALTHY")
+    return (details["state"] in ["RUNNING", "READY"] and
+            details["health"] == "HEALTHY")
 
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
     if async:
       cmd += ["--async"]
 
-    return utils.try_call(cmd)
+    utils.try_call(cmd)
 
   def delete(self, async=False):
     super().delete()
@@ -134,6 +136,8 @@ class TPUManager(env.ResourceManager):
     def cmd():
       self.tmp_name = self.new_name()
       self.tmp_ip = self.new_ip()
+      logging.info(f"Trying to acquire TPU with name: "
+                   "{self.tmp_name} ip: {self.tmp_ip}")
       cmd = [
           "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
           f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
