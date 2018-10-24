@@ -53,7 +53,7 @@ class TPU(env.Resource):
     self._name = name
     details = self.details
     self.ip = details["ipAddress"]
-    self.preemptible = details["preemptible"] == "true"
+    self.preemptible = details.get("preemptible") == "true"
 
   @property
   def name(self):
