@@ -21,8 +21,9 @@ class Resource(object):
   def down(self):
     raise NotImplementedError
 
-  def delete(self, confirm=True):
-    raise NotImplementedError
+  def delete(self):
+    if self.manager:
+      self.manager.remove(self)
 
 
 class Instance(Resource):
@@ -43,6 +44,8 @@ class Instance(Resource):
     return self._node
 
   def down(self):
+    for rm in self.resource_managers:
+      rm.down()
     return self.node.shut_down()
 
   def delete(self, confirm=True):
@@ -55,8 +58,7 @@ class Instance(Resource):
         logging.info("Aborting deletion...")
         return
 
-    if self.manager:
-      self.manager.remove(self)
+    super().delete()
 
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 

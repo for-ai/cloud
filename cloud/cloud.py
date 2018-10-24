@@ -13,8 +13,6 @@ def connect(arg=None):
       config = toml.loads(cf)
       provider = config.pop("provider").lower()
       cloud.instance = reg.retrieve(provider, config=config)
-  elif isinstance(arg, str):
-    cloud.instance = reg.retrieve(arg)
   elif isinstance(arg, Instance):
     cloud.instance = arg
   else:

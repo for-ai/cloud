@@ -44,9 +44,6 @@ class GCPInstance(env.Instance):
       self._name = utils.call(["hostname"])[1].strip()
     return self._name
 
-  def down(self):
-    return self.node.shut_down()
-
 
 class TPU(env.Resource):
 
@@ -80,30 +77,21 @@ class TPU(env.Resource):
     details = self.details
     return (details["state"] == "RUNNING" and details["health"] == "HEALTHY")
 
-  def down(self):
-    raise NotImplementedError
+  def down(self, async=False):
+    cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
+    if async:
+      cmd += ["--async"]
 
-  def delete(self, confirm=True):
-    raise NotImplementedError
+    return utils.try_call(cmd)
 
-  @property
-  def down_cmd(self):
-    return ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
+  def delete(self, async=False):
+    super().delete()
 
-  def delete(self, confirm=True):
-    while confirm:
-      r = input("Are you sure you wish to delete this instance (y/[n]): ")
+    cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
+    if async:
+      cmd += ["--async"]
 
-      if r == "y":
-        break
-      elif r in ["n", ""]:
-        logging.info("Aborting deletion...")
-        return
-
-    if self.manager:
-      self.manager.remove(self)
-
-    utils.try_call(["gcloud", "alpha", "compute", "tpus", "delete", self.name])
+    utils.try_call(cmd)
 
 
 class TPUManager(env.ResourceManager):
