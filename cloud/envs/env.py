@@ -46,9 +46,9 @@ class Instance(Resource):
   def down(self, async=False, delete_resources=True):
     for rm in self.resource_managers:
       if delete_resources:
-        rm.delete()
+        rm.delete(async=async)
       else:
-        rm.down()
+        rm.down(async=async)
     self.driver.ex_stop_node(self.node)
 
   def delete(self, async=False, confirm=True):
