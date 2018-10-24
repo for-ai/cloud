@@ -18,10 +18,10 @@ class Resource(object):
   def usable(self):
     return True
 
-  def down(self):
+  def down(self, async=False):
     raise NotImplementedError
 
-  def delete(self):
+  def delete(self, async=False):
     if self.manager:
       self.manager.remove(self)
 
@@ -43,12 +43,15 @@ class Instance(Resource):
                           self.driver.list_nodes())[0]
     return self._node
 
-  def down(self):
+  def down(self, async=False, delete_resources=True):
     for rm in self.resource_managers:
-      rm.down()
+      if delete_resources:
+        rm.delete()
+      else:
+        rm.down()
     return self.node.shut_down()
 
-  def delete(self, confirm=True):
+  def delete(self, async=False, confirm=True):
     while confirm:
       r = input("Are you sure you wish to delete this instance (y/[n]): ")
 
@@ -58,7 +61,7 @@ class Instance(Resource):
         logging.info("Aborting deletion...")
         return
 
-    super().delete()
+    super().delete(async=async)
 
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
@@ -99,18 +102,18 @@ class ResourceManager(object):
         cmd = lambda c=cmd: c() + [self.preemptible_flag]
     utils.try_call(cmd)
 
-  def down(self):
+  def down(self, async=False):
     for r in self.resources:
       try:
-        r.down()
+        r.down(async=async)
       except Exception as e:
         logging.error("Failed to shutdown resource: %s" % r)
         logging.error(traceback.format_exc())
 
-  def delete(self):
+  def delete(self, async=False):
     for r in self.resources:
       try:
-        r.delete()
+        r.delete(async=async)
       except Exception as e:
         logging.error("Failed to delete resource: %s" % r)
         logging.error(traceback.format_exc())

@@ -36,7 +36,7 @@ class GCPInstance(env.Instance):
           "http://metadata.google.internal/computeMetadata/v1/project/project-id",
           headers={"Metadata-Flavor": "Google"})
       project_id = r.text
-      self._driver = get_driver(Provider.GCE)("", "", project_id)
+      self._driver = get_driver(Provider.GCE)("", "", project=project_id)
     return self._driver
 
   @property
