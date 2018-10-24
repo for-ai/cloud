@@ -2,10 +2,8 @@ import tensorflow as tf
 import os.path
 import sys
 
-# Add parent dir of this file's dir to sys.path (OS-agnostically)
-sys.path.append(
-    os.path.normpath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
-from cloud import cloud
+import cloud
+
 from model import get_autoencoder
 from data import get_mnist
 
@@ -53,8 +51,8 @@ def main():
       estimator=estimator,
       train_input_fn=train_input_fn,
       eval_input_fn=eval_input_fn,
-      train_steps=10000,
-      eval_steps=1000)
+      train_steps=100,
+      eval_steps=10)
 
   experiment.train_and_evaluate()
 
