@@ -39,8 +39,8 @@ class Instance(Resource):
   @property
   def node(self):
     if getattr(self, '_node', None) is None:
-      self._node = filter(lambda n: n.name == self.name,
-                          self.driver.list_nodes()).next()
+      self._node = next(
+          filter(lambda n: n.name == self.name, self.driver.list_nodes()))
     return self._node
 
   def down(self, async=False, delete_resources=True):
