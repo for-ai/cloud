@@ -11,14 +11,19 @@ class AzureInstance(env.Instance):
 
   def __init__(self, config, **kwargs):
     super().__init__(**kwargs)
+    self.application_id = config["application_id"]
     self.subscription_id = config["subscription_id"]
-    self.key_file = config["key_file"]
+    self.tenant_id = config["tenant_id"]
+    self.key = config["key"]
 
   @property
   def driver(self):
     if getattr(self, '_driver', None) is None:
-      self._driver = get_driver(Provider.AZURE)(
-          subscription_id=self.subscription_id, key_file=self.key_file)
+      self._driver = get_driver(Provider.AZURE_ARM)(
+          tenant_id=self.tenant_id,
+          subscription_id=self.subscription_id,
+          key=self.application_id,
+          secret=self.key)
     return self._driver
 
   @property

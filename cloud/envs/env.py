@@ -49,7 +49,7 @@ class Instance(Resource):
         rm.delete()
       else:
         rm.down()
-    return self.driver.ex_stop_node(self.node)
+    self.driver.ex_stop_node(self.node)
 
   def delete(self, async=False, confirm=True):
     while confirm:
