@@ -1,18 +1,22 @@
+import libcloud
+import toml
+
 import cloud
 from cloud import registry as reg
 from cloud import Instance
+from cloud.envs.utils import config_path
 
 
-def connect(arg):
-
-  if isinstance(arg, str):
-    cloud.instance = reg.retrieve(arg)
-  elif isinstance(arg, Instance):
-    cloud.instance = arg()
-  else:
-    raise Exception(f"Unknown input type: {type(arg)}."
-                    " Please provide a string or Instance object.")
+def connect():
+  with open(config_path(), "r") as cf:
+    config = toml.load(cf)
+    provider = config.pop("provider").lower()
+    cloud.instance = reg.retrieve(provider, config=config)
 
 
-def disconnect():
+def down():
   cloud.instance.down()
+
+
+def delete(confirm=True):
+  cloud.instance.delete(confirm)

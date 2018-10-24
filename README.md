@@ -4,19 +4,36 @@ A super lightweight cloud management tool designed with deep learning applicatio
 
 This project is still a work in progress. We welcome all contributions, suggestions, and use-cases. Reach out to us over GitHub or at team@for.ai with ideas!
 
+## Contents
+- [Quickstart](#quickstart)
+    - [Install](#install)
+    - [Config](#config)
+    - [Usage](#usage)
+- [Documentation](#documentation)
+    - [Amazon EC2](#amazon-ec2)
+    - [Azure](#azure)
+    - [Google Cloud](#google-cloud)
+
 ## Quickstart
 
-Install:
+### Install:
 
 ```
 git clone git@github.com:for-ai/cloud.git
 sudo pip install -e cloud
 ```
 
-### GPU
+### Config:
+
+See `configs/cloud.toml-*` for instructions on how to authenticate for each provider (Google Cloud, AWS EC2, and Azure).
+
+Place your completed configuration file (named `cloud.toml`) in either root `/` or `$HOME`. Otherwise, provide a full path to the file in `$CLOUD_CFG`.
+
+### Usage:
+#### GPU
 ```python
 import cloud
-cloud.connect("gcp")
+cloud.connect()
 
 # gpu instances have a dedicated GPU so we don't need to worry
 # about preemption or acquiring/releasing accelerators online.
@@ -27,17 +44,16 @@ while True:
 cloud.down()  # stop the instance (does not delete instance)
 ```
 
-### TPU
+#### TPU (Only on GCP)
 ```python
 import cloud
-cloud.connect("gcp")
+cloud.connect()
 
 tpu = cloud.instance.tpu.up(preemptible=True)  # acquire the accelerator
-# tpu contains info like the tpu's name location state etc.
-with True:
+while True:
   if not tpu.usable:
-    tpu.down()  # release the accelerator
-    tpu = cloud.instance.tpu.up(preemptible=True)  # acquire the accelerator
+    tpu.delete(async=True)  # release the accelerator in the background
+    tpu = cloud.instance.tpu.up(preemptible=True)  # acquire a new accelerator
   else:
     # train your model or w/e
     
@@ -76,7 +92,7 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | `usable ` | bool, whether this resource is usable |
 | **methods** | **desc.** |
 | `down()` | stop the resource. Note: this should not necessarily delete this resource |
-| `delete(confirm=True)` | delete this resource |
+| `delete()` | delete this resource |
 
 ### cloud.Instance(Resource)
 
@@ -85,6 +101,8 @@ An object representing a cloud instance with a set of Resources that can be allo
 | properties | desc. |
 | :------- | :------- |
 | `resource_managers` | list of ResourceManagers |
+| **methods** | **desc.** |
+| `delete(confirm=True)` | delete this instance |
 
 ### cloud.ResourceManager
 
@@ -103,9 +121,19 @@ Class for managing the creation and maintanence of `cloud.Resources`.
 | `remove(*args, **kwargs)` | remove an existing resource from this manager |
 | `up(preemptible=True)` | allocate and manage a new instance of `resource_cls ` |
 
+## Amazon EC2
+### cloud.AWSInstance(Instance)
+
+A `cloud.Instance` object for AWS EC2 instances.
+
+## Azure
+### cloud.AzureInstance(Instance)
+
+A `cloud.Instance` object for Microsoft Azure instances.
+
 ## Google Cloud
 
-Our GCPInstance requires that your instances have `gcloud` installed and properly authenticated so that `gcloud alpha compute tpus create`
+Our GCPInstance requires that your instances have `gcloud` installed and properly authenticated so that `gcloud alpha compute tpus create test_name` runs without issue.
 
 ### cloud.GCPInstance(Instance)
 
@@ -134,6 +162,9 @@ Resource class for TPU accelerators.
 | `ip` | str, IP address of the TPU |
 | `preemptible` | bool, whether this TPU is preemptible or not |
 | `details` | dict {str: str}, properties of this TPU |
+| **methods** | **desc.** |
+| `down(async=False)` | stop this TPU |
+| `delete(async=False)` | delete this TPU |
 
 ### cloud.TPUManager(ResourceManager)
 
@@ -145,5 +176,3 @@ ResourceManager class for TPU accelerators.
 | `ips` | list of str, ips of the managed TPUs |
 | **methods** | **desc.** |
 | `__init__(instance)` | `instance`: the `cloud.GCPInstance` object operating this TPUManager  |
-
-

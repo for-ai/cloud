@@ -1,0 +1,11 @@
+provider = "azure"
+
+# Instructions for finding values for tenant_id, application_id, key:
+# https://docs.microsoft.com/en-ca/azure/active-directory/develop/howto-create-service-principal-portal
+# Instructions for finding values for subscription_id:
+# https://blogs.msdn.microsoft.com/mschray/2015/05/13/getting-your-azure-guid-subscription-id/
+
+application_id = "APPLICATION_ID"
+subscription_id = "SUBSCRIPTION_ID"
+tenant_id = "TENANT_ID"
+key = "KEY"

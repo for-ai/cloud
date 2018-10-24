@@ -23,3 +23,25 @@ def try_call(cmd, retry_count=5):
 
     raise Exception(
         f"Call to `{c}` failed {retry_count} times. Aborting. {out}")
+
+
+def config_path():
+  path = os.environ.get("CLOUD_CFG")
+  if path is not None and os.path.isfile(path):
+    return path
+  logging.warn(f"Unable to find config file at path: {path}")
+
+  path = os.path.join(os.environ["HOME"], "cloud.toml")
+  if os.path.isfile(path):
+    return path
+  logging.warn(f"Unable to find config file at path: {path}")
+
+  path = "/cloud.toml"
+  if os.path.isfile(path):
+    return path
+  logging.warn(f"Unable to find config file at path: {path}")
+
+  raise Exception("Configuration file not found in any of the above locations."
+                  "\n See cloud/configs for example configurations to fill in "
+                  "and use; copy and place in a file named `cloud.toml` at "
+                  "`/cloud.toml` or `$HOME/cloud.toml`.")

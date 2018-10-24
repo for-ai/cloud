@@ -15,21 +15,43 @@ class Resource(object):
     raise NotImplementedError
 
   @property
-  def down_cmd(self):
-    raise NotImplementedError
-
-  @property
-  def delete_cmd(self):
-    raise NotImplementedError
-
-  @property
   def usable(self):
     return True
 
-  def down(self):
-    utils.try_call(self.down_cmd)
+  def down(self, async=False):
+    raise NotImplementedError
 
-  def delete(self, confirm=True):
+  def delete(self, async=False):
+    if self.manager:
+      self.manager.remove(self)
+
+
+class Instance(Resource):
+
+  def __init__(self, manager=None, **kwargs):
+    super().__init__(manager=manager)
+    self.resource_managers = []
+
+  @property
+  def driver(self):
+    raise NotImplementedError
+
+  @property
+  def node(self):
+    if getattr(self, '_node', None) is None:
+      self._node = next(
+          filter(lambda n: n.name == self.name, self.driver.list_nodes()))
+    return self._node
+
+  def down(self, async=False, delete_resources=True):
+    for rm in self.resource_managers:
+      if delete_resources:
+        rm.delete(async=async)
+      else:
+        rm.down(async=async)
+    self.driver.ex_stop_node(self.node)
+
+  def delete(self, async=False, confirm=True):
     while confirm:
       r = input("Are you sure you wish to delete this instance (y/[n]): ")
 
@@ -39,20 +61,9 @@ class Resource(object):
         logging.info("Aborting deletion...")
         return
 
-    utils.try_call(self.delete_cmd)
-    if self.manager:
-      self.manager.remove(self)
+    super().delete(async=async)
 
-
-class Instance(Resource):
-
-  def __init__(self):
-    super().__init__()
-    self.resource_managers = []
-
-  def __del__(self):
-    for rm in self.resource_managers:
-      del rm
+    self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
 class ResourceManager(object):
@@ -63,24 +74,8 @@ class ResourceManager(object):
     self.resource_cls = resource_cls
     self.resources = []
 
-  def __del__(self):
-    for r in self.resources:
-      try:
-        r.down()
-      except Exception as e:
-        logging.error("Failed to shutdown resource: %s" % r)
-        logging.error(traceback.format_exc())
-
-  def __get__(self, idx):
+  def __getitem__(self, idx):
     return self.resources[idx]
-
-  @property
-  def up_cmd(self):
-    raise NotImplementedError
-
-  @property
-  def preemptible_flag(self):
-    return ""
 
   def add(self, *args, **kwargs):
     if len(args) == 1:
@@ -106,3 +101,19 @@ class ResourceManager(object):
       if callable(cmd):
         cmd = lambda c=cmd: c() + [self.preemptible_flag]
     utils.try_call(cmd)
+
+  def down(self, async=False):
+    for r in self.resources:
+      try:
+        r.down(async=async)
+      except Exception as e:
+        logging.error("Failed to shutdown resource: %s" % r)
+        logging.error(traceback.format_exc())
+
+  def delete(self, async=False):
+    for r in self.resources:
+      try:
+        r.delete(async=async)
+      except Exception as e:
+        logging.error("Failed to delete resource: %s" % r)
+        logging.error(traceback.format_exc())

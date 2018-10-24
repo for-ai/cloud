@@ -1,9 +1,13 @@
+import logging
 import random
 import re
 import string
 import subprocess
-
+import requests
 import numpy as np
+
+from libcloud.compute.types import Provider
+from libcloud.compute.providers import get_driver
 
 from cloud.envs import env
 from cloud.envs import registry
@@ -13,8 +17,8 @@ from cloud.envs import utils
 @registry.register("gcp")
 class GCPInstance(env.Instance):
 
-  def __init__(self):
-    super().__init__()
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
 
     # Check for dependencies
     try:
@@ -26,16 +30,20 @@ class GCPInstance(env.Instance):
     self.resource_managers = [self.tpu]
 
   @property
+  def driver(self):
+    if getattr(self, '_driver', None) is None:
+      r = requests.get(
+          "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+          headers={"Metadata-Flavor": "Google"})
+      project_id = r.text
+      self._driver = get_driver(Provider.GCE)("", "", project=project_id)
+    return self._driver
+
+  @property
   def name(self):
-    return utils.call(["hostname"])[1].strip()
-
-  @property
-  def down_cmd(self):
-    return ["gcloud", "compute", "instances", "stop", self.name]
-
-  @property
-  def delete_cmd(self):
-    return ["gcloud", "compute", "instances", "delete", self.name]
+    if getattr(self, '_name', None) is None:
+      self._name = utils.call(["hostname"])[1].strip()
+    return self._name
 
 
 class TPU(env.Resource):
@@ -45,7 +53,7 @@ class TPU(env.Resource):
     self._name = name
     details = self.details
     self.ip = details["ipAddress"]
-    self.preemptible = details["preemptible"] == "true"
+    self.preemptible = details.get("preemptible") == "true"
 
   @property
   def name(self):
@@ -68,39 +76,31 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] == "RUNNING" and details["health"] == "HEALTHY")
+    return (details["state"] in ["RUNNING", "READY"] and
+            details["health"] == "HEALTHY")
 
-  @property
-  def down_cmd(self):
-    return ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
+  def down(self, async=False):
+    cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
+    if async:
+      cmd += ["--async"]
 
-  @property
-  def delete_cmd(self):
-    return ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
+    utils.try_call(cmd)
+
+  def delete(self, async=False):
+    super().delete()
+
+    cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
+    if async:
+      cmd += ["--async"]
+    cmd += ["--quiet"]  # suppress user confirmation
+
+    utils.try_call(cmd)
 
 
 class TPUManager(env.ResourceManager):
 
   def __init__(self, instance):
     super().__init__(instance, TPU)
-
-  @property
-  def up_cmd(self):
-
-    def fn():
-      self.tmp_name = self.new_name()
-      self.tmp_ip = self.new_ip()
-      return [
-          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
-          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
-          "--network=default"
-      ]
-
-    return fn
-
-  @property
-  def preemptible_flag(self):
-    return "--preemptible"
 
   @property
   def names(self):
@@ -133,7 +133,22 @@ class TPUManager(env.ResourceManager):
     return super().add(*args, **kwargs)
 
   def up(self, preemptible=True):
-    super().up(preemptible=preemptible)
+
+    def cmd():
+      self.tmp_name = self.new_name()
+      self.tmp_ip = self.new_ip()
+      logging.info(f"Trying to acquire TPU with name: "
+                   "{self.tmp_name} ip: {self.tmp_ip}")
+      cmd = [
+          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
+          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
+          "--network=default"
+      ]
+      if preemptible:
+        cmd += ["--preemptible"]
+      return cmd
+
+    utils.try_call(cmd)
     tpu = TPU(name=self.tmp_name)
     self.resources.append(tpu)
 

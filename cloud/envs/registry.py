@@ -11,6 +11,6 @@ def register(name):
   return fn
 
 
-def retrieve(name):
+def retrieve(name, **kwargs):
   global INSTANCES
-  return INSTANCES[name]()
+  return INSTANCES[name](**kwargs)
