@@ -40,7 +40,7 @@ class Instance(Resource):
   def node(self):
     if getattr(self, '_node', None) is None:
       self._node = filter(lambda n: n.name == self.name,
-                          self.driver.list_nodes())[0]
+                          self.driver.list_nodes()).next()
     return self._node
 
   def down(self, async=False, delete_resources=True):

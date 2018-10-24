@@ -92,6 +92,7 @@ class TPU(env.Resource):
     cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
     if async:
       cmd += ["--async"]
+    cmd += ["--quiet"]  # suppress user confirmation
 
     utils.try_call(cmd)
 
