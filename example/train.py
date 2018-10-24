@@ -47,14 +47,8 @@ def main():
       model_dir="tmp/run",
       config=run_config)
 
-  experiment = tf.contrib.learn.Experiment(
-      estimator=estimator,
-      train_input_fn=train_input_fn,
-      eval_input_fn=eval_input_fn,
-      train_steps=100,
-      eval_steps=10)
-
-  experiment.train_and_evaluate()
+  estimator.train(100)
+  estimator.evaluate(10)
 
 
 if __name__ == "__main__":
