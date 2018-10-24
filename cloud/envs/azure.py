@@ -2,6 +2,9 @@ from cloud.envs import env
 from cloud.envs import registry
 from cloud.envs import utils
 
+from libcloud.compute.types import Provider
+from libcloud.compute.providers import get_driver
+
 
 @registry.register("azure")
 class AzureInstance(env.Instance):

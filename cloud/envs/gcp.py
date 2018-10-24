@@ -2,7 +2,7 @@ import random
 import re
 import string
 import subprocess
-
+import requests
 import numpy as np
 
 from libcloud.compute.types import Provider
