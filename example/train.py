@@ -42,8 +42,7 @@ def main():
   eval_input_fn = get_mnist("tmp/data", hparams, training=False)
 
   estimator = tf.estimator.Estimator(
-      model_fn=tf.contrib.estimator.replicate_model_fn(
-          get_autoencoder(hparams, 0.01)),
+      model_fn=get_autoencoder(hparams, 0.01),
       model_dir="tmp/run",
       config=run_config)
 
