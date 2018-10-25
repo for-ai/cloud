@@ -105,6 +105,7 @@ class TPUManager(env.ResourceManager):
 
   def __init__(self, instance):
     super().__init__(instance, TPU)
+    self.collect_existing()
 
   @property
   def names(self):
