@@ -76,12 +76,8 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] in ["READY"] and details["health"] == "HEALTHY")
-
-  @property
-  def in_use(self):
-    details = self.details
-    return (details["state"] in ["RUNNING"] and details["health"] == "HEALTHY")
+    return (details["state"] in ["READY", "RUNNING"] and
+            details["health"] == "HEALTHY")
 
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
