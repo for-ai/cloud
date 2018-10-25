@@ -14,8 +14,6 @@ class AWSInstance(env.Instance):
 
   def __init__(self, config, **kwargs):
     super().__init__(**kwargs)
-    # read from env first
-
     self.access_key = config["access_key"]
     self.secret_key = config["secret_key"]
     self.region = config["region"]
