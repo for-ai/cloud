@@ -76,8 +76,12 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] in ["RUNNING", "READY"] and
-            details["health"] == "HEALTHY")
+    return (details["state"] in ["READY"] and details["health"] == "HEALTHY")
+
+  @property
+  def in_use(self):
+    details = self.details
+    return (details["state"] in ["RUNNING"] and details["health"] == "HEALTHY")
 
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
@@ -114,6 +118,7 @@ class TPUManager(env.ResourceManager):
     _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
     lines = r.split("\n")[1:]
     names = [l.split()[0] for l in lines]
+    names = filter(lambda n: self.name in n, names)
     tpus = [TPU(name=n) for n in names]
     self.resources.extend(tpus)
 
@@ -138,6 +143,13 @@ class TPUManager(env.ResourceManager):
         self.resources.append(tpu)
         return tpu
     return super().add(*args, **kwargs)
+
+  def get(self, preemptible=True):
+    for tpu in self.resources:
+      if tpu.usable:
+        return tpu
+
+    return self.up(preemptible)
 
   def up(self, preemptible=True):
 
