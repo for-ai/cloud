@@ -110,6 +110,13 @@ class TPUManager(env.ResourceManager):
   def ips(self):
     return [r.ip for r in self.resources]
 
+  def collect_existing(self):
+    _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
+    lines = r.split("\n")[1:]
+    names = [l.split()[0] for l in lines]
+    tpus = [TPU(name=n) for n in names]
+    self.resources.extend(tpus)
+
   def new_name(self, length=5):
     while True:
       name = random.sample(string.ascii_lowercase, length)
