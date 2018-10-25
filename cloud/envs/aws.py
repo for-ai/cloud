@@ -29,5 +29,7 @@ class AWSInstance(env.Instance):
   @property
   def name(self):
     if getattr(self, '_name', None) is None:
-      self._name = utils.call(["hostname"])[1].strip()
+      # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
+      r = requests.get("http://169.254.169.254/latest/meta-data/instance-id")
+      self._name = r.text
     return self._name

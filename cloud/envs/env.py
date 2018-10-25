@@ -45,7 +45,16 @@ class Instance(Resource):
             "list_nodes returned an empty list, did you set up your cloud permissions correctly?"
         )
 
-      self._node = next(filter(lambda n: n.name == self.name, nodes))
+      for n in nodes:
+        if n.name == self.name:
+          self._node = n
+
+      # node not found
+      if self._node is None:
+        raise Exception(
+            "current node could not be found - name: {} node_list: {}".format(
+                self.name, nodes))
+
     return self._node
 
   def down(self, async=False, delete_resources=True):
