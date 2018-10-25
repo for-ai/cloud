@@ -79,6 +79,25 @@ class TPU(env.Resource):
     return (details["state"] in ["READY", "RUNNING"] and
             details["health"] == "HEALTHY")
 
+  @classmethod
+  def up(cls, name, ip, preemptible=True, async=False):
+
+    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "create", name,
+        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
+    ]
+    if preemptible:
+      cmd += ["--preemptible"]
+    if async:
+      cmd += ["--async"]
+
+    s, _ = utils.call(cmd)
+    if s == 0:
+      return cls(name=name)
+
+    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
     if async:
@@ -147,26 +166,17 @@ class TPUManager(env.ResourceManager):
       if tpu.usable:
         return tpu
 
-    return self.up(preemptible)
+    return self.up(preemptible=preemptible)
 
-  def up(self, preemptible=True):
+  def up(self, preemptible=True, async=False, attempts=5):
+    for _ in range(attempts):
+      try:
+        tpu = TPU.up(
+            self.new_name, self.new_ip, preemptible=preemptible, async=async)
+        tpu.manager = self
+        self.resources.append(tpu)
+        return tpu
+      except Exception, e:
+        continue
 
-    def cmd():
-      self.tmp_name = self.new_name()
-      self.tmp_ip = self.new_ip()
-      logging.info(f"Trying to acquire TPU with name: "
-                   "{self.tmp_name} ip: {self.tmp_ip}")
-      cmd = [
-          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
-          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
-          "--network=default"
-      ]
-      if preemptible:
-        cmd += ["--preemptible"]
-      return cmd
-
-    utils.try_call(cmd)
-    tpu = TPU(name=self.tmp_name)
-    self.resources.append(tpu)
-
-    return tpu
+    raise e
