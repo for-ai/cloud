@@ -22,8 +22,8 @@ class AWSInstance(env.Instance):
   @property
   def driver(self):
     if getattr(self, '_driver', None) is None:
-      self._driver = get_driver(Provider.EC2)(self.access_key, self.secret_key,
-                                              self.region)
+      self._driver = get_driver(Provider.EC2)(
+          self.access_key, self.secret_key, region=self.region)
     return self._driver
 
   @property
