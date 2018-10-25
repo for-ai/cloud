@@ -118,6 +118,7 @@ class TPUManager(env.ResourceManager):
   def collect_existing(self):
     _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
     lines = r.split("\n")[1:]
+    print(lines)
     names = [l.split()[0] for l in lines]
     names = filter(lambda n: self.name in n, names)
     tpus = [TPU(name=n) for n in names]
