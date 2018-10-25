@@ -19,6 +19,7 @@ class AWSInstance(env.Instance):
     # https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
     self.access_key = os.environ.get("AWS_ACCESS_KEY_ID")
     self.secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    self.region = os.environ.get("AWS_DEFAULT_REGION")
 
     # fallback to config values otherwise
     if self.access_key is None:
@@ -27,10 +28,14 @@ class AWSInstance(env.Instance):
     if self.secret_key is None:
       self.secret_key = config["secret_key"]
 
+    if self.region is None:
+      self.region = config["region"]
+
   @property
   def driver(self):
     if getattr(self, '_driver', None) is None:
-      self._driver = get_driver(Provider.EC2)(self.access_key, self.secret_key)
+      self._driver = get_driver(Provider.EC2)(self.access_key, self.secret_key,
+                                              self.region)
     return self._driver
 
   @property
