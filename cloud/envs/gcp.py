@@ -169,14 +169,14 @@ class TPUManager(env.ResourceManager):
     return self.up(preemptible=preemptible)
 
   def up(self, preemptible=True, async=False, attempts=5):
-    for _ in range(attempts):
+    for i in range(attempts):
       try:
         tpu = TPU.up(
             self.new_name, self.new_ip, preemptible=preemptible, async=async)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu
-      except Exception, e:
+      except Exception as e:
+        if i + 1 == attempts:
+          raise e
         continue
-
-    raise e
