@@ -64,14 +64,9 @@ cloud.down()  # release all resources, then stop the instance (does not delete i
 
 # Documentation
 
-### cloud.connect(arg=None)
+### cloud.connect()
 Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it. 
 
-| param | desc. |
-| :------- | :------- |
-| arg | One of: |
-|     | - None (default), will infer from `config.toml` |
-|     | - cloud.Instance object. |
 | **returns** | **desc.** |
 | cloud_env | a cloud.Instance.  |
 
@@ -87,8 +82,6 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | properties | desc. |
 | :------- | :------- |
 | `name` | str, name of the instance |
-| `down_cmd ` | list of str, command to stop this resource. Passed to subprocess.run |
-| `delete_cmd ` | list of str, command to delete this resource. Passed to subprocess.run |
 | `usable ` | bool, whether this resource is usable |
 | **methods** | **desc.** |
 | `down()` | stop the resource. Note: this should not necessarily delete this resource |
@@ -111,7 +104,6 @@ Class for managing the creation and maintanence of `cloud.Resources`.
 | properties | desc. |
 | :------- | :------- |
 | `resource_cls ` | `cloud.Resource` type, the class of the resource to be managed |
-| `up_cmd ` | list of str, command to create a resource. Passed to subprocess.run |
 | `preemptible_flag ` | str, flag to append to `up_cmd` in order to request a preemptible version of a resource |
 | `resources ` | list of `cloud.Resource`s, managed resources |
 | **methods** | **desc.** |
@@ -142,7 +134,6 @@ A `cloud.Instance` object for Google Cloud instances.
 | properties | desc. |
 | :------- | :------- |
 | `tpu ` | `cloud.TPUManager`, a resource manager for this instance's TPUs |
-| `up_cmd ` | list of str, command to create a resource. Passed to subprocess.run |
 | `preemptible_flag ` | str, flag to append to `up_cmd` in order to request a preemptible version of a resource |
 | `resources ` | list of `cloud.Resource`s, managed resources |
 | **methods** | **desc.** |
