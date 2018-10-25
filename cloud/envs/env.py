@@ -1,6 +1,6 @@
 import logging
 import traceback
-
+import sys
 from cloud.envs import utils
 
 
@@ -39,8 +39,22 @@ class Instance(Resource):
   @property
   def node(self):
     if getattr(self, '_node', None) is None:
-      self._node = next(
-          filter(lambda n: n.name == self.name, self.driver.list_nodes()))
+      nodes = self.driver.list_nodes()
+      if len(nodes) == 0:
+        raise Exception(
+            "list_nodes returned an empty list, did you set up your cloud permissions correctly?"
+        )
+
+      for n in nodes:
+        if n.name == self.name:
+          self._node = n
+
+      # node not found
+      if self._node is None:
+        raise Exception(
+            "current node could not be found - name: {} node_list: {}".format(
+                self.name, nodes))
+
     return self._node
 
   def down(self, async=False, delete_resources=True):
