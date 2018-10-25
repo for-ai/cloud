@@ -21,10 +21,10 @@ class AWSInstance(env.Instance):
     self.secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 
     # fallback to config values otherwise
-    if self.access_key == "":
+    if self.access_key is None:
       self.access_key = config["access_key"]
 
-    if self.secret_key == "":
+    if self.secret_key is None:
       self.secret_key = config["secret_key"]
 
   @property

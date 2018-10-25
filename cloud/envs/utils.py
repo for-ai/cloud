@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import subprocess
 
 
@@ -21,8 +22,7 @@ def try_call(cmd, retry_count=5):
     else:
       logging.debug(f"Call to `{c}` failed with status: {status}. Retrying...")
 
-    raise Exception(
-        f"Call to `{c}` failed {retry_count} times. Aborting. {out}")
+  sys.exit(f"Call to `{c}` failed {retry_count} times. Aborting. {out}")
 
 
 def config_path():
@@ -41,7 +41,7 @@ def config_path():
     return path
   logging.warn(f"Unable to find config file at path: {path}")
 
-  raise Exception("Configuration file not found in any of the above locations."
-                  "\n See cloud/configs for example configurations to fill in "
-                  "and use; copy and place in a file named `cloud.toml` at "
-                  "`/cloud.toml` or `$HOME/cloud.toml`.")
+  sys.exit("Configuration file not found in any of the above locations."
+           "\n See cloud/configs for example configurations to fill in "
+           "and use; copy and place in a file named `cloud.toml` at "
+           "`/cloud.toml` or `$HOME/cloud.toml`.")
