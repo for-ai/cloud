@@ -1,3 +1,5 @@
+import os
+
 from cloud.envs import env
 from cloud.envs import registry
 from cloud.envs import utils
@@ -11,8 +13,19 @@ class AWSInstance(env.Instance):
 
   def __init__(self, config, **kwargs):
     super().__init__(**kwargs)
-    self.access_key = config["access_key"]
-    self.secret_key = config["secret_key"]
+    # read from env first
+
+    # support env variables required by AWS
+    # https://docs.aws.amazon.com/cli/latest/userguide/cli-environment.html
+    self.access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    self.secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+    # fallback to config values otherwise
+    if self.access_key == "":
+      self.access_key = config["access_key"]
+
+    if self.secret_key == "":
+      self.secret_key = config["secret_key"]
 
   @property
   def driver(self):
