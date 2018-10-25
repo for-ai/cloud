@@ -172,7 +172,10 @@ class TPUManager(env.ResourceManager):
     for i in range(attempts):
       try:
         tpu = TPU.up(
-            self.new_name, self.new_ip, preemptible=preemptible, async=async)
+            self.new_name(),
+            self.new_ip(),
+            preemptible=preemptible,
+            async=async)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu
