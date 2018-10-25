@@ -1,4 +1,5 @@
 import os
+import requests
 
 from cloud.envs import env
 from cloud.envs import registry
