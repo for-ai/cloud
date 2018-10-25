@@ -120,7 +120,7 @@ class TPUManager(env.ResourceManager):
     lines = r.split("\n")[1:]
     lines = filter(lambda l: l != "", lines)
     names = [l.split()[0] for l in lines]
-    names = filter(lambda n: self.name in n, names)
+    names = filter(lambda n: self.instance.name in n, names)
     tpus = [TPU(name=n) for n in names]
     self.resources.extend(tpus)
 
