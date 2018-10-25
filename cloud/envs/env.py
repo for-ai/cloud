@@ -41,7 +41,7 @@ class Instance(Resource):
     if getattr(self, '_node', None) is None:
       nodes = self.driver.list_nodes()
       if len(nodes) == 0:
-        sys.exit(
+        raise Exception(
             "list_nodes returned an empty list, did you set up your cloud permissions correctly?"
         )
 
