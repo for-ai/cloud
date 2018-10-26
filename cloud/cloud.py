@@ -6,8 +6,6 @@ from cloud import registry as reg
 from cloud import Instance
 from cloud.envs.utils import config_path
 
-logger = logging.getLogger('cloud')
-
 
 def connect():
   with open(config_path(), "r") as cf:

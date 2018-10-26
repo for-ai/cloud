@@ -1,3 +1,7 @@
+import logging
+global logger
+logger = logging.getLogger('cloud')
+
 from cloud.envs import registry
 
 from cloud.envs import env
@@ -19,4 +23,3 @@ from cloud.envs.gcp import TPUManager
 from cloud.cloud import connect
 from cloud.cloud import down
 from cloud.cloud import delete
-from cloud.cloud import logger
