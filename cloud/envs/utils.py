@@ -1,7 +1,6 @@
+import logging
 import os
 import subprocess
-
-from cloud import logger as logging
 
 
 def call(cmd):

@@ -1,7 +1,3 @@
-import logging
-global logger
-logger = logging.getLogger('cloud')
-
 from cloud.envs import registry
 
 from cloud.envs import env

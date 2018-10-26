@@ -1,3 +1,4 @@
+import logging
 import random
 import re
 import string
@@ -11,7 +12,6 @@ from libcloud.compute.providers import get_driver
 from cloud.envs import env
 from cloud.envs import registry
 from cloud.envs import utils
-from cloud import logger as logging
 
 
 @registry.register("gcp")

@@ -1,7 +1,7 @@
+import logging
 import traceback
 
 from cloud.envs import utils
-from cloud import logger as logging
 
 
 class Resource(object):
