@@ -19,7 +19,4 @@ from cloud.envs.gcp import TPUManager
 from cloud.cloud import connect
 from cloud.cloud import down
 from cloud.cloud import delete
-
-import logging
-global logger
-logger = logging.getLogger('cloud')
+from cloud.cloud import logger
