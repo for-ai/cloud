@@ -137,6 +137,10 @@ class TPUManager(env.ResourceManager):
     names = [l.split()[0] for l in lines]
     names = filter(lambda n: self.instance.name in n, names)
     tpus = [TPU(name=n) for n in names]
+
+    for tpu in tpus:
+      logging.info(f"Found TPU named {tpu.name}")
+
     self.resources.extend(tpus)
 
   def new_name(self, length=5):
