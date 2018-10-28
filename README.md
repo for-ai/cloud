@@ -49,11 +49,11 @@ cloud.down()  # stop the instance (does not delete instance)
 import cloud
 cloud.connect()
 
-tpu = cloud.instance.tpu.up(preemptible=True)  # acquire the accelerator
+tpu = cloud.instance.tpu.get(preemptible=True)  # acquire an accelerator
 while True:
   if not tpu.usable:
     tpu.delete(async=True)  # release the accelerator in the background
-    tpu = cloud.instance.tpu.up(preemptible=True)  # acquire a new accelerator
+    tpu = cloud.instance.tpu.get(preemptible=True)  # acquire a new accelerator
   else:
     # train your model or w/e
     
@@ -64,14 +64,9 @@ cloud.down()  # release all resources, then stop the instance (does not delete i
 
 # Documentation
 
-### cloud.connect(arg=None)
+### cloud.connect()
 Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it. 
 
-| param | desc. |
-| :------- | :------- |
-| arg | One of: |
-|     | - None (default), will infer from `config.toml` |
-|     | - cloud.Instance object. |
 | **returns** | **desc.** |
 | cloud_env | a cloud.Instance.  |
 
@@ -87,12 +82,11 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | properties | desc. |
 | :------- | :------- |
 | `name` | str, name of the instance |
-| `down_cmd ` | list of str, command to stop this resource. Passed to subprocess.run |
-| `delete_cmd ` | list of str, command to delete this resource. Passed to subprocess.run |
 | `usable ` | bool, whether this resource is usable |
 | **methods** | **desc.** |
-| `down()` | stop the resource. Note: this should not necessarily delete this resource |
-| `delete()` | delete this resource |
+| `up(async=False)` | start an existing stopped resource |
+| `down(async=False)` | stop the resource. Note: this should not necessarily delete this resource |
+| `delete(async=False)` | delete this resource |
 
 ### cloud.Instance(Resource)
 
@@ -102,7 +96,8 @@ An object representing a cloud instance with a set of Resources that can be allo
 | :------- | :------- |
 | `resource_managers` | list of ResourceManagers |
 | **methods** | **desc.** |
-| `delete(confirm=True)` | delete this instance |
+| `down(async=False, delete_resources=True)` | stop this instance and optionally delete all managed resources |
+| `delete(async=False, confirm=True)` | delete this instance with optional user confirmation |
 
 ### cloud.ResourceManager
 
@@ -110,16 +105,14 @@ Class for managing the creation and maintanence of `cloud.Resources`.
 
 | properties | desc. |
 | :------- | :------- |
+| `instance ` | `cloud.Instance` instance owning this resource manager |
 | `resource_cls ` | `cloud.Resource` type, the class of the resource to be managed |
-| `up_cmd ` | list of str, command to create a resource. Passed to subprocess.run |
-| `preemptible_flag ` | str, flag to append to `up_cmd` in order to request a preemptible version of a resource |
 | `resources ` | list of `cloud.Resource`s, managed resources |
 | **methods** | **desc.** |
 | `__init__(instance, resource_cls)` | `instance`: the `cloud.Instance` object operating this ResourceManager  |
 |  | `resource_cls `: the `cloud.Resource` class this object manages |
 | `add(*args, **kwargs)` | add an existing resource to this manager |
 | `remove(*args, **kwargs)` | remove an existing resource from this manager |
-| `up(preemptible=True)` | allocate and manage a new instance of `resource_cls ` |
 
 ## Amazon EC2
 ### cloud.AWSInstance(Instance)
@@ -142,15 +135,10 @@ A `cloud.Instance` object for Google Cloud instances.
 | properties | desc. |
 | :------- | :------- |
 | `tpu ` | `cloud.TPUManager`, a resource manager for this instance's TPUs |
-| `up_cmd ` | list of str, command to create a resource. Passed to subprocess.run |
-| `preemptible_flag ` | str, flag to append to `up_cmd` in order to request a preemptible version of a resource |
-| `resources ` | list of `cloud.Resource`s, managed resources |
+| `resource_managers ` | list of owned `cloud.ResourceManager`s |
 | **methods** | **desc.** |
-| `__init__(instance, resource_cls)` | `instance`: the `cloud.Instance` object operating this ResourceManager  |
-|  | `resource_cls `: the `cloud.Resource` class this object manages |
-| `add(*args, **kwargs)` | add an existing resource to this manager |
-| `remove(*args, **kwargs)` | remove an existing resource from this manager |
-| `up(preemptible=True)` | allocate and manage a new instance of `resource_cls ` |
+| `__init__(collect_existing_tpus=True, **kwargs)` | `collect_existing_tpus `: bool, whether to add existing TPUs to this manager  |
+|  | `**kwargs `: passed to `cloud.Instance`'s initializer |
 
 
 ### cloud.TPU(Resource)
@@ -163,6 +151,7 @@ Resource class for TPU accelerators.
 | `preemptible` | bool, whether this TPU is preemptible or not |
 | `details` | dict {str: str}, properties of this TPU |
 | **methods** | **desc.** |
+| `up(async=False)` | start this TPU |
 | `down(async=False)` | stop this TPU |
 | `delete(async=False)` | delete this TPU |
 
@@ -175,4 +164,8 @@ ResourceManager class for TPU accelerators.
 | `names` | list of str, names of the managed TPUs |
 | `ips` | list of str, ips of the managed TPUs |
 | **methods** | **desc.** |
-| `__init__(instance)` | `instance`: the `cloud.GCPInstance` object operating this TPUManager  |
+| `__init__(instance, collect_existing=True)` | `instance`: the `cloud.GCPInstance` object operating this TPUManager  |
+|  | `collect_existing`: bool, whether to add existing TPUs to this manager |
+| `clean(async=True)` | delete all managed TPUs with unhealthy states  |
+| `get(preemptible=True)` | get an available TPU, or create one using `up()` if none exist |
+| `up(preemptible=True, async=False)` | allocate and manage a new instance of `resource_cls ` |

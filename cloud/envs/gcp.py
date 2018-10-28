@@ -17,7 +17,7 @@ from cloud.envs import utils
 @registry.register("gcp")
 class GCPInstance(env.Instance):
 
-  def __init__(self, **kwargs):
+  def __init__(self, collect_existing_tpus=True, **kwargs):
     super().__init__(**kwargs)
 
     # Check for dependencies
@@ -26,7 +26,7 @@ class GCPInstance(env.Instance):
     except:
       raise Exception("Missing commandline utility: gcloud")
 
-    self.tpu = TPUManager(self)
+    self.tpu = TPUManager(self, collect_existing=collect_existing_tpus)
     self.resource_managers = [self.tpu]
 
   @property
@@ -76,8 +76,15 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] in ["RUNNING", "READY"] and
+    return (details["state"] in ["READY", "RUNNING"] and
             details["health"] == "HEALTHY")
+
+  def up(self, async=False):
+    cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
+    if async:
+      cmd += ["--async"]
+
+    utils.try_call(cmd)
 
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
@@ -99,8 +106,10 @@ class TPU(env.Resource):
 
 class TPUManager(env.ResourceManager):
 
-  def __init__(self, instance):
+  def __init__(self, instance, collect_existing=True):
     super().__init__(instance, TPU)
+    if collect_existing:
+      self.collect_existing()
 
   @property
   def names(self):
@@ -110,14 +119,32 @@ class TPUManager(env.ResourceManager):
   def ips(self):
     return [r.ip for r in self.resources]
 
-  def new_name(self, length=5):
+  def collect_existing(self):
+    _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
+    lines = r.split("\n")[1:]
+    lines = filter(lambda l: l != "", lines)
+    names = [l.split()[0] for l in lines]
+    names = filter(lambda n: self.instance.name in n, names)
+    tpus = [TPU(name=n) for n in names]
+
+    for tpu in tpus:
+      logging.info(f"Found TPU named {tpu.name}")
+
+    self.resources.extend(tpus)
+
+  def clean(self, async=True):
+    for tpu in self.resources:
+      if tpu.details["health"] != "HEALTHY":
+        tpu.delete(async=async)
+
+  def _new_name(self, length=5):
     while True:
       name = random.sample(string.ascii_lowercase, length)
       name = self.instance.name + "-" + ''.join(name)
       if name not in self.names:
         return name
 
-  def new_ip(self):
+  def _new_ip(self):
     while True:
       ip = random.randint(1, 98)
       if ip not in self.ips:
@@ -132,24 +159,42 @@ class TPUManager(env.ResourceManager):
         return tpu
     return super().add(*args, **kwargs)
 
-  def up(self, preemptible=True):
+  def get(self, preemptible=True):
+    for tpu in self.resources:
+      if tpu.usable:
+        return tpu
 
-    def cmd():
-      self.tmp_name = self.new_name()
-      self.tmp_ip = self.new_ip()
-      logging.info(f"Trying to acquire TPU with name: "
-                   "{self.tmp_name} ip: {self.tmp_ip}")
-      cmd = [
-          "gcloud", "alpha", "compute", "tpus", "create", self.tmp_name,
-          f"--range=10.0.{self.tmp_ip}.0/29", "--version=1.11",
-          "--network=default"
-      ]
-      if preemptible:
-        cmd += ["--preemptible"]
-      return cmd
+    return self.up(preemptible=preemptible)
 
-    utils.try_call(cmd)
-    tpu = TPU(name=self.tmp_name)
-    self.resources.append(tpu)
+  def _up(self, name, ip, preemptible, async):
+    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "create", name,
+        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
+    ]
+    if preemptible:
+      cmd += ["--preemptible"]
+    if async:
+      cmd += ["--async"]
 
-    return tpu
+    s, _ = utils.call(cmd)
+    if s == 0:
+      return TPU(name=name)
+
+    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+
+  def up(self, preemptible=True, async=False, attempts=5):
+    for i in range(attempts):
+      try:
+        tpu = self._up(
+            self._new_name(),
+            self._new_ip(),
+            preemptible=preemptible,
+            async=async)
+        tpu.manager = self
+        self.resources.append(tpu)
+        return tpu
+      except Exception as e:
+        if i + 1 == attempts:
+          raise e
+        continue

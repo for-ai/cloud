@@ -18,6 +18,9 @@ class Resource(object):
   def usable(self):
     return True
 
+  def up(self, async=False):
+    raise NotImplementedError
+
   def down(self, async=False):
     raise NotImplementedError
 
@@ -109,12 +112,8 @@ class ResourceManager(object):
 
     raise NotImplementedError
 
-  def up(self, preemptible=True):
-    cmd = self.up_cmd
-    if preemptible:
-      if callable(cmd):
-        cmd = lambda c=cmd: c() + [self.preemptible_flag]
-    utils.try_call(cmd)
+  def up(self, async=False):
+    raise NotImplementedError
 
   def down(self, async=False):
     for r in self.resources:
