@@ -18,8 +18,7 @@ class Resource(object):
   def usable(self):
     return True
 
-  @classmethod
-  def up(preemptible=True, async=False):
+  def up(self, async=False):
     raise NotImplementedError
 
   def down(self, async=False):
@@ -99,7 +98,7 @@ class ResourceManager(object):
 
     raise NotImplementedError
 
-  def up(self, preemptible=True, async=False):
+  def up(self, async=False):
     raise NotImplementedError
 
   def down(self, async=False):

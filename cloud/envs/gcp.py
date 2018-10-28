@@ -17,7 +17,7 @@ from cloud.envs import utils
 @registry.register("gcp")
 class GCPInstance(env.Instance):
 
-  def __init__(self, **kwargs):
+  def __init__(self, collect_existing_tpus=True, **kwargs):
     super().__init__(**kwargs)
 
     # Check for dependencies
@@ -26,7 +26,7 @@ class GCPInstance(env.Instance):
     except:
       raise Exception("Missing commandline utility: gcloud")
 
-    self.tpu = TPUManager(self)
+    self.tpu = TPUManager(self, collect_existing=collect_existing_tpus)
     self.resource_managers = [self.tpu]
 
   @property
@@ -79,24 +79,12 @@ class TPU(env.Resource):
     return (details["state"] in ["READY", "RUNNING"] and
             details["health"] == "HEALTHY")
 
-  @classmethod
-  def up(cls, name, ip, preemptible=True, async=False):
-
-    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
-    cmd = [
-        "gcloud", "alpha", "compute", "tpus", "create", name,
-        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
-    ]
-    if preemptible:
-      cmd += ["--preemptible"]
+  def up(self, async=False):
+    cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
     if async:
       cmd += ["--async"]
 
-    s, _ = utils.call(cmd)
-    if s == 0:
-      return cls(name=name)
-
-    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+    utils.try_call(cmd)
 
   def down(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
@@ -118,9 +106,10 @@ class TPU(env.Resource):
 
 class TPUManager(env.ResourceManager):
 
-  def __init__(self, instance):
+  def __init__(self, instance, collect_existing=True):
     super().__init__(instance, TPU)
-    self.collect_existing()
+    if collect_existing:
+      self.collect_existing()
 
   @property
   def names(self):
@@ -143,14 +132,19 @@ class TPUManager(env.ResourceManager):
 
     self.resources.extend(tpus)
 
-  def new_name(self, length=5):
+  def clean(self, async=True):
+    for tpu in self.resources:
+      if tpu.details["health"] != "HEALTHY":
+        tpu.delete(async=async)
+
+  def _new_name(self, length=5):
     while True:
       name = random.sample(string.ascii_lowercase, length)
       name = self.instance.name + "-" + ''.join(name)
       if name not in self.names:
         return name
 
-  def new_ip(self):
+  def _new_ip(self):
     while True:
       ip = random.randint(1, 98)
       if ip not in self.ips:
@@ -172,12 +166,29 @@ class TPUManager(env.ResourceManager):
 
     return self.up(preemptible=preemptible)
 
+  def _up(self, name, ip, preemptible, async):
+    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "create", name,
+        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
+    ]
+    if preemptible:
+      cmd += ["--preemptible"]
+    if async:
+      cmd += ["--async"]
+
+    s, _ = utils.call(cmd)
+    if s == 0:
+      return TPU(name=name)
+
+    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+
   def up(self, preemptible=True, async=False, attempts=5):
     for i in range(attempts):
       try:
-        tpu = TPU.up(
-            self.new_name(),
-            self.new_ip(),
+        tpu = self._up(
+            self._new_name(),
+            self._new_ip(),
             preemptible=preemptible,
             async=async)
         tpu.manager = self
