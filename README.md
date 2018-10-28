@@ -17,7 +17,11 @@ This project is still a work in progress. We welcome all contributions, suggesti
 ## Quickstart
 
 ### Install:
-
+Sort of stable 🚀:
+```
+sudo pip install dl-cloud
+```
+Bleeding edge 🛸:
 ```
 git clone git@github.com:for-ai/cloud.git
 sudo pip install -e cloud
