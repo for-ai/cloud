@@ -2,6 +2,7 @@ import logging
 import multiprocessing
 import traceback
 import sys
+import time
 
 from cloud.envs import utils
 from errand_boy.run import main as eb_main
@@ -46,6 +47,7 @@ class Instance(Resource):
 
     self._p = multiprocessing.Process(target=start_process)
     self._p.start()
+    time.wait(2)
 
   def __del__(self):
     self._p.terminate()
