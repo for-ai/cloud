@@ -47,12 +47,11 @@ class Instance(Resource):
 
     self._p = multiprocessing.Process(target=start_process)
     self._p.start()
-    time.wait(2)
+    time.sleep(2)
 
   def __del__(self):
     self._p.terminate()
     self._p.join()
-    super().__del__()
 
   @property
   def driver(self):
