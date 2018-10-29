@@ -1,3 +1,4 @@
+import errand_boy
 import sys
 
 import logging
@@ -45,8 +46,7 @@ logging.config.dictConfig({
         },
     },
 })
-eb_logger = logging.getLogger("errand_boy")
-eb_logger.setLevel(logging.WARNING)
+logging.getLogger("errand_boy").setLevel(logging.WARNING)
 
 from cloud.envs import registry
 
