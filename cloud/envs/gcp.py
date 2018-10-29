@@ -1,4 +1,3 @@
-import logging
 import random
 import re
 import string
@@ -128,7 +127,7 @@ class TPUManager(env.ResourceManager):
     tpus = [TPU(name=n) for n in names]
 
     for tpu in tpus:
-      logging.info(f"Found TPU named {tpu.name}")
+      logger.info(f"Found TPU named {tpu.name}")
 
     self.resources.extend(tpus)
 
@@ -167,7 +166,7 @@ class TPUManager(env.ResourceManager):
     return self.up(preemptible=preemptible)
 
   def _up(self, name, ip, preemptible, async):
-    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
         f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"

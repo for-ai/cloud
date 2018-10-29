@@ -1,3 +1,42 @@
+import logging.config
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True,
+    'handlers': {
+        'stdout': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'verbose',
+        },
+        'stdout': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'verbose',
+        },
+        'stderr': {
+            'level': 'WARN',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stderr,
+            'formatter': 'verbose',
+        },
+        'stderr': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'stream': sys.stderr,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'cloud': {
+            'handlers': ['stderr', 'stdout'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+})
+
 from cloud.envs import registry
 
 from cloud.envs import env

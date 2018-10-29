@@ -3,6 +3,8 @@ import traceback
 import sys
 from cloud.envs import utils
 
+logger = logging.getLogger(__name__)
+
 
 class Resource(object):
 
@@ -75,7 +77,7 @@ class Instance(Resource):
       if r == "y":
         break
       elif r in ["n", ""]:
-        logging.info("Aborting deletion...")
+        logger.info("Aborting deletion...")
         return
 
     super().delete(async=async)
@@ -120,13 +122,13 @@ class ResourceManager(object):
       try:
         r.down(async=async)
       except Exception as e:
-        logging.error("Failed to shutdown resource: %s" % r)
-        logging.error(traceback.format_exc())
+        logger.error("Failed to shutdown resource: %s" % r)
+        logger.error(traceback.format_exc())
 
   def delete(self, async=False):
     for r in self.resources:
       try:
         r.delete(async=async)
       except Exception as e:
-        logging.error("Failed to delete resource: %s" % r)
-        logging.error(traceback.format_exc())
+        logger.error("Failed to delete resource: %s" % r)
+        logger.error(traceback.format_exc())
