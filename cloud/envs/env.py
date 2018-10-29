@@ -1,7 +1,9 @@
 import logging
 import traceback
 import sys
+
 from cloud.envs import utils
+from errand_boy.run import main as eb_main
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,18 @@ class Instance(Resource):
   def __init__(self, manager=None, **kwargs):
     super().__init__(manager=manager)
     self.resource_managers = []
+
+    # start a server to manage API calls
+    def start_process():
+      eb_main([None])
+
+    self._p = Process(target=start_process)
+    self._p.start()
+
+  def __del__(self):
+    self._p.terminate()
+    self._p.join()
+    super().__del__()
 
   @property
   def driver(self):
