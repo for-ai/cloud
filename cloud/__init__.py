@@ -4,6 +4,12 @@ import logging.config
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format':
+            '%(levelname)s %(asctime)s %(process)d %(thread)d %(name)s:%(lineno)s %(funcName)s() %(message)s'
+        },
+    },
     'handlers': {
         'stdout': {
             'level': 'DEBUG',
