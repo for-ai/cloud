@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 def call(cmd):
+  if isinstance(cmd, list):
+    cmd = " ".join(cmd)
+
   global EB_TRANSPORT
   stdout, stderr, returncode = EB_TRANSPORT.run_cmd(cmd)
   return returncode, stdout.decode("utf-8"), stderr.decode("utf-8")
