@@ -41,11 +41,7 @@ class Instance(Resource):
     super().__init__(manager=manager)
     self.resource_managers = []
 
-    # start a server to manage API calls
-    def start_process():
-      eb_main([None])
-
-    self._p = multiprocessing.Process(target=start_process)
+    self._p = multiprocessing.Process(target=eb_main, args=([None],))
     self._p.start()
     time.sleep(2)
 
