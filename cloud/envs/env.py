@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import traceback
 import sys
 
@@ -43,7 +44,7 @@ class Instance(Resource):
     def start_process():
       eb_main([None])
 
-    self._p = Process(target=start_process)
+    self._p = multiprocessing.Process(target=start_process)
     self._p.start()
 
   def __del__(self):
