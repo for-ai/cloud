@@ -63,7 +63,7 @@ class TPU(env.Resource):
 
   @property
   def details(self):
-    _, r = utils.call(
+    _, r, _ = utils.call(
         ["gcloud", "alpha", "compute", "tpus", "describe", self.name])
     r = r.split("\n")
     details = dict()
@@ -122,7 +122,7 @@ class TPUManager(env.ResourceManager):
     return [r.ip for r in self.resources]
 
   def collect_existing(self):
-    _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
+    _, r, _ = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
     lines = r.split("\n")[1:]
     lines = filter(lambda l: l != "", lines)
     names = [l.split()[0] for l in lines]
@@ -179,11 +179,12 @@ class TPUManager(env.ResourceManager):
     if async:
       cmd += ["--async"]
 
-    s, _ = utils.call(cmd)
+    s, _, err = utils.call(cmd)
     if s == 0:
       return TPU(name=name)
 
-    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+    raise Exception(
+        f"Failed to create TPU with name: {name} ip: {ip} error: \n{err}")
 
   def up(self, preemptible=True, async=False, attempts=5):
     for i in range(attempts):

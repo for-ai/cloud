@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 def call(cmd):
   global EB_TRANSPORT
-  stdout, _, returncode = EB_TRANSPORT.run_cmd(cmd)
-  return returncode, stdout.decode("utf-8")
+  stdout, stderr, returncode = EB_TRANSPORT.run_cmd(cmd)
+  return returncode, stdout.decode("utf-8"), stderr.decode("utf-8")
 
 
 def try_call(cmd, retry_count=5):
@@ -21,7 +21,7 @@ def try_call(cmd, retry_count=5):
   for _ in range(retry_count):
     if callable(cmd):
       c = cmd()
-    status, out = call(c)
+    status, stdout, stderr = call(c)
     if status == 0:
       logger.debug(f"Call to `{c}` successful")
       return c

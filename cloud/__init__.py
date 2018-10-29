@@ -46,7 +46,7 @@ logging.config.dictConfig({
     },
 })
 eb_logger = logging.getLogger("errand_boy")
-eb_logger.setLevel(logging.WARN)
+eb_logger.setLevel(logging.WARNING)
 
 from cloud.envs import registry
 
