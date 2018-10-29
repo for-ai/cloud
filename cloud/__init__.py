@@ -46,7 +46,7 @@ logging.config.dictConfig({
 })
 
 from errand_boy.run import main as eb_main
-eb_main()
+eb_main([None])  # start a server to manage API calls
 
 from cloud.envs import registry
 
