@@ -47,7 +47,7 @@ class Instance(Resource):
 
   def __del__(self):
     self._p.terminate()
-    self._p.join()
+    self._p.join(timeout=5)
 
   @property
   def driver(self):
