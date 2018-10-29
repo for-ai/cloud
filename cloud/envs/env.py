@@ -41,14 +41,13 @@ class Instance(Resource):
     super().__init__(manager=manager)
     self.resource_managers = []
 
-    self._p = multiprocessing.Process(
-        target=eb_main, args=([None],), daemon=True)
+    self._p = multiprocessing.Process(target=eb_main, args=([None],))
     self._p.start()
     time.sleep(2)
 
-  # def __del__(self):
-  #   self._p.terminate()
-  #   self._p.join()
+  def __del__(self):
+    self._p.terminate()
+    self._p.join()
 
   @property
   def driver(self):
