@@ -45,6 +45,9 @@ logging.config.dictConfig({
     },
 })
 
+from errand_boy.run import main as eb_main
+eb_main()
+
 from cloud.envs import registry
 
 from cloud.envs import env
