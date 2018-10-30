@@ -1,3 +1,7 @@
+import logging
+logger = logging.getLogger("cloud")
+logger.propagate = True
+
 from cloud.envs import registry
 
 from cloud.envs import env
