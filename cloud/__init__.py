@@ -1,3 +1,12 @@
+import sys
+import logging
+
+global logger
+logger = logging.getLogger("cloud")
+handler = logging.StreamHandler(sys.stderr)
+handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
+logger.addHandler(handler)
+
 from cloud.envs import registry
 
 from cloud.envs import env

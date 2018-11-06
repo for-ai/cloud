@@ -13,6 +13,8 @@ from cloud.envs import env
 from cloud.envs import registry
 from cloud.envs import utils
 
+logger = logging.getLogger(__name__)
+
 
 @registry.register("gcp")
 class GCPInstance(env.Instance):
@@ -61,7 +63,7 @@ class TPU(env.Resource):
 
   @property
   def details(self):
-    _, r = utils.call(
+    _, r, _ = utils.call(
         ["gcloud", "alpha", "compute", "tpus", "describe", self.name])
     r = r.split("\n")
     details = dict()
@@ -120,7 +122,7 @@ class TPUManager(env.ResourceManager):
     return [r.ip for r in self.resources]
 
   def collect_existing(self):
-    _, r = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
+    _, r, _ = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
     lines = r.split("\n")[1:]
     lines = filter(lambda l: l != "", lines)
     names = [l.split()[0] for l in lines]
@@ -128,7 +130,7 @@ class TPUManager(env.ResourceManager):
     tpus = [TPU(name=n) for n in names]
 
     for tpu in tpus:
-      logging.info(f"Found TPU named {tpu.name}")
+      logger.info(f"Found TPU named {tpu.name}")
 
     self.resources.extend(tpus)
 
@@ -167,7 +169,7 @@ class TPUManager(env.ResourceManager):
     return self.up(preemptible=preemptible)
 
   def _up(self, name, ip, preemptible, async):
-    logging.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
         f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
@@ -177,11 +179,12 @@ class TPUManager(env.ResourceManager):
     if async:
       cmd += ["--async"]
 
-    s, _ = utils.call(cmd)
+    s, _, err = utils.call(cmd)
     if s == 0:
       return TPU(name=name)
 
-    raise Exception(f"Failed to create TPU with name: {name} ip: {ip}")
+    raise Exception(
+        f"Failed to create TPU with name: {name} ip: {ip} error: \n{err}")
 
   def up(self, preemptible=True, async=False, attempts=5):
     for i in range(attempts):
