@@ -33,6 +33,7 @@ def get_server():
     EB_SERVER = multiprocessing.Process(target=eb_main, args=([None],))
     EB_SERVER.start()
     time.sleep(1)
+    logging.getLogger("errand_boy").setLevel(logging.ERROR)
   return EB_SERVER
 
 
