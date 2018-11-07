@@ -43,7 +43,9 @@ class Instance(Resource):
     assert utils.get_server().is_alive()
 
   def __del__(self):
+    logger.info("Killing transport")
     utils.kill_transport()
+    logger.info("Killing server")
     utils.kill_server()
 
   @property
