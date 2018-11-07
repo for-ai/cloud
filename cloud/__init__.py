@@ -7,6 +7,9 @@ handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
 logger.addHandler(handler)
 
+EB_TRANSPORT = None
+EB_SERVER = None
+
 from cloud.envs import registry
 
 from cloud.envs import env
