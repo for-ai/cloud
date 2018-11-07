@@ -1,10 +1,59 @@
 import logging
+import multiprocessing
 import os
 import subprocess
+import time
 
 from errand_boy.transports.unixsocket import UNIXSocketTransport
+from errand_boy.run import main as eb_main
 
-EB_TRANSPORT = UNIXSocketTransport()
+EB_TRANSPORT = None
+EB_SERVER = None
+
+
+def get_transport():
+  global EB_TRANSPORT
+  if EB_TRANSPORT is None:
+    EB_TRANSPORT = UNIXSocketTransport()
+  return EB_TRANSPORT
+
+
+def kill_transport():
+  global EB_TRANSPORT
+  if EB_TRANSPORT is None:
+    return
+
+  del EB_TRANSPORT
+  EB_TRANSPORT = None
+
+
+def _server_fn():
+  server = UNIXSocketTransport()
+  server.run_server()
+
+
+def get_server():
+  global EB_SERVER
+  if EB_SERVER is None:
+    EB_SERVER = multiprocessing.Process(target=_server_fn)
+    EB_SERVER.start()
+    time.sleep(1)
+    logging.getLogger("errand_boy").setLevel(logging.ERROR)
+  return EB_SERVER
+
+
+def kill_server():
+  global EB_SERVER
+  if EB_SERVER is None:
+    return
+
+  if EB_SERVER.is_alive():
+    EB_SERVER.terminate()
+    time.sleep(0.5)
+  EB_SERVER.join(timeout=5)
+  del EB_SERVER
+  EB_SERVER = None
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +62,7 @@ def call(cmd):
   if isinstance(cmd, list):
     cmd = " ".join(cmd)
 
-  global EB_TRANSPORT
-  stdout, stderr, returncode = EB_TRANSPORT.run_cmd(cmd)
+  stdout, stderr, returncode = get_transport().run_cmd(cmd)
   return returncode, stdout.decode("utf-8"), stderr.decode("utf-8")
 
 

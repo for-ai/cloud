@@ -54,7 +54,7 @@ class TPU(env.Resource):
     super().__init__(manager=manager)
     self._name = name
     details = self.details
-    self.ip = details["ipAddress"]
+    self.ip = details.get("ipAddress")
     self.preemptible = details.get("preemptible") == "true"
 
   @property
@@ -78,8 +78,8 @@ class TPU(env.Resource):
   @property
   def usable(self):
     details = self.details
-    return (details["state"] in ["READY", "RUNNING"] and
-            details["health"] == "HEALTHY")
+    return (details.get("state") in ["READY", "RUNNING"] and
+            details.get("health") == "HEALTHY")
 
   def up(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
@@ -136,7 +136,7 @@ class TPUManager(env.ResourceManager):
 
   def clean(self, async=True):
     for tpu in self.resources:
-      if tpu.details["health"] != "HEALTHY":
+      if tpu.details.get("health") != "HEALTHY":
         tpu.delete(async=async)
 
   def _new_name(self, length=5):

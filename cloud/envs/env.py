@@ -1,11 +1,9 @@
 import logging
-import multiprocessing
 import traceback
 import sys
 import time
 
 from cloud.envs import utils
-from errand_boy.run import main as eb_main
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +39,13 @@ class Instance(Resource):
     super().__init__(manager=manager)
     self.resource_managers = []
 
-    self._p = multiprocessing.Process(target=eb_main, args=([None],))
-    self._p.start()
-    time.sleep(2)
+    assert utils.get_server().is_alive()
 
-  def __del__(self):
-    self._p.terminate()
-    self._p.join(timeout=5)
+  def _kill_command_server(self):
+    logger.warn("Killing transport")
+    utils.kill_transport()
+    logger.warn("Killing server")
+    utils.kill_server()
 
   @property
   def driver(self):
@@ -80,6 +78,8 @@ class Instance(Resource):
         rm.delete(async=async)
       else:
         rm.down(async=async)
+
+    self._kill_command_server()
     self.driver.ex_stop_node(self.node)
 
   def delete(self, async=False, confirm=True):
@@ -94,6 +94,7 @@ class Instance(Resource):
 
     super().delete(async=async)
 
+    self._kill_command_server()
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
