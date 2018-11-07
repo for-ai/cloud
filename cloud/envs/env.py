@@ -5,7 +5,6 @@ import sys
 import time
 
 from cloud.envs import utils
-from errand_boy.run import main as eb_main
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +40,15 @@ class Instance(Resource):
     super().__init__(manager=manager)
     self.resource_managers = []
 
-    self._p = multiprocessing.Process(target=eb_main, args=([None],))
-    self._p.start()
-    time.sleep(2)
+    self._p = utils.EB_SERVER
+    if not self._p.is_alive():
+      self._p.start()
+      time.sleep(2)
 
   def __del__(self):
-    self._p.terminate()
+    if self._p.is_alive():
+      self._p.terminate()
+      time.sleep(0.5)
     self._p.join(timeout=5)
 
   @property

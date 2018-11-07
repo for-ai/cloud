@@ -1,10 +1,19 @@
 import logging
+import multiprocessing
 import os
 import subprocess
 
 from errand_boy.transports.unixsocket import UNIXSocketTransport
+from errand_boy.run import main as eb_main
 
-EB_TRANSPORT = UNIXSocketTransport()
+global EB_TRANSPORT
+if EB_TRANSPORT is None:
+  EB_TRANSPORT = UNIXSocketTransport()
+
+global EB_SERVER
+if EB_SERVER is None:
+  EB_SERVER = multiprocessing.Process(target=eb_main, args=([None],))
+  EB_SERVER.start()
 
 logger = logging.getLogger(__name__)
 
