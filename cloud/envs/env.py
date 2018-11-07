@@ -40,16 +40,11 @@ class Instance(Resource):
     super().__init__(manager=manager)
     self.resource_managers = []
 
-    self._p = utils.EB_SERVER
-    if not self._p.is_alive():
-      self._p.start()
-      time.sleep(2)
+    assert utils.get_server().is_alive()
 
   def __del__(self):
-    if self._p.is_alive():
-      self._p.terminate()
-      time.sleep(0.5)
-    self._p.join(timeout=5)
+    utils.kill_transport()
+    utils.kill_server()
 
   @property
   def driver(self):
