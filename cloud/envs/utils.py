@@ -32,6 +32,7 @@ def get_server():
   if EB_SERVER is None:
     EB_SERVER = multiprocessing.Process(target=eb_main, args=([None],))
     EB_SERVER.start()
+    time.sleep(1)
   return EB_SERVER
 
 
