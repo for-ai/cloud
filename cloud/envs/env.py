@@ -41,7 +41,7 @@ class Instance(Resource):
 
     assert utils.get_server().is_alive()
 
-  def __del__(self):
+  def _kill_command_server(self):
     logger.warn("Killing transport")
     utils.kill_transport()
     logger.warn("Killing server")
@@ -78,6 +78,8 @@ class Instance(Resource):
         rm.delete(async=async)
       else:
         rm.down(async=async)
+
+    self._kill_command_server()
     self.driver.ex_stop_node(self.node)
 
   def delete(self, async=False, confirm=True):
@@ -92,6 +94,7 @@ class Instance(Resource):
 
     super().delete(async=async)
 
+    self._kill_command_server()
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
