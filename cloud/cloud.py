@@ -1,4 +1,5 @@
 import libcloud
+import logging
 import toml
 
 import cloud
