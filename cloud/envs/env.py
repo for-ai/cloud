@@ -42,9 +42,7 @@ class Instance(Resource):
     assert utils.get_server().is_alive()
 
   def _kill_command_server(self):
-    logger.warn("Killing transport")
     utils.kill_transport()
-    logger.warn("Killing server")
     utils.kill_server()
 
   @property

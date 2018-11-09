@@ -1,3 +1,4 @@
+import atexit
 import libcloud
 import logging
 import toml
@@ -18,9 +19,7 @@ def connect():
 
 
 def close():
-  logger.warn("Killing transport")
   utils.kill_transport()
-  logger.warn("Killing server")
   utils.kill_server()
 
 
@@ -30,3 +29,6 @@ def down():
 
 def delete(confirm=True):
   cloud.instance.delete(confirm)
+
+
+atexit.register(close)
