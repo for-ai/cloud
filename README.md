@@ -2,7 +2,16 @@
 
 A super lightweight cloud management tool designed with deep learning applications in mind.
 
-This project is still a work in progress. We welcome all contributions, suggestions, and use-cases. Reach out to us over GitHub or at team@for.ai with ideas!
+**Built with the belief that managing cloud resources should be as easy as:**
+```
+import cloud
+
+cloud.connect()
+train_my_network()
+cloud.down()
+```
+
+We welcome all contributions, suggestions, and use-cases. Reach out to us over GitHub or at team@for.ai with ideas!
 
 ## Contents
 - [Quickstart](#quickstart)
@@ -17,11 +26,11 @@ This project is still a work in progress. We welcome all contributions, suggesti
 ## Quickstart
 
 ### Install:
-Sort of stable 🚀:
+Sort of stable:
 ```
 sudo pip install dl-cloud
 ```
-Bleeding edge 🛸:
+Bleeding edge:
 ```
 git clone git@github.com:for-ai/cloud.git
 sudo pip install -e cloud
