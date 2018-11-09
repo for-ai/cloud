@@ -88,15 +88,15 @@ class TPU(env.Resource):
 
     utils.try_call(cmd)
 
-  def down(self, async=False):
+  def down(self, async=True):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
     if async:
       cmd += ["--async"]
 
     utils.try_call(cmd)
 
-  def delete(self, async=False):
-    super().delete()
+  def delete(self, async=True):
+    super().delete(async=async)
 
     cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
     if async:

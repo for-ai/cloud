@@ -50,7 +50,7 @@ def kill_server():
   if EB_SERVER.is_alive():
     EB_SERVER.terminate()
     time.sleep(0.5)
-  EB_SERVER.join(timeout=5)
+  EB_SERVER.join(timeout=1)
   del EB_SERVER
   EB_SERVER = None
 

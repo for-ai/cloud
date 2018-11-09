@@ -25,10 +25,10 @@ class Resource(object):
   def up(self, async=False):
     raise NotImplementedError
 
-  def down(self, async=False):
+  def down(self, async=True):
     raise NotImplementedError
 
-  def delete(self, async=False):
+  def delete(self, async=True):
     if self.manager:
       self.manager.remove(self)
 
@@ -72,7 +72,7 @@ class Instance(Resource):
 
     return self._node
 
-  def down(self, async=False, delete_resources=True):
+  def clean(self, async=True, delete_resources=True):
     for rm in self.resource_managers:
       if delete_resources:
         rm.delete(async=async)
@@ -80,9 +80,12 @@ class Instance(Resource):
         rm.down(async=async)
 
     self._kill_command_server()
+
+  def down(self, async=True, delete_resources=True):
+    self.clean(async=async, delete_resources=delete_resources)
     self.driver.ex_stop_node(self.node)
 
-  def delete(self, async=False, confirm=True):
+  def delete(self, async=True, confirm=True):
     while confirm:
       r = input("Are you sure you wish to delete this instance (y/[n]): ")
 
@@ -94,7 +97,7 @@ class Instance(Resource):
 
     super().delete(async=async)
 
-    self._kill_command_server()
+    self.clean(async=async, delete_resources=True)
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
@@ -130,7 +133,7 @@ class ResourceManager(object):
   def up(self, async=False):
     raise NotImplementedError
 
-  def down(self, async=False):
+  def down(self, async=True):
     for r in self.resources:
       try:
         r.down(async=async)
@@ -138,7 +141,7 @@ class ResourceManager(object):
         logger.error("Failed to shutdown resource: %s" % r)
         logger.error(traceback.format_exc())
 
-  def delete(self, async=False):
+  def delete(self, async=True):
     for r in self.resources:
       try:
         r.delete(async=async)
