@@ -14,7 +14,7 @@ def connect():
     cloud.instance = reg.retrieve(provider, config=config)
 
 
-def quit():
+def close():
   logger.warn("Killing transport")
   utils.kill_transport()
   logger.warn("Killing server")
