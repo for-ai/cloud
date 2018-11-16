@@ -161,18 +161,18 @@ class TPUManager(env.ResourceManager):
         return tpu
     return super().add(*args, **kwargs)
 
-  def get(self, preemptible=True):
+  def get(self, tf_version=1.11, preemptible=True):
     for tpu in self.resources:
       if tpu.usable:
         return tpu
 
     return self.up(preemptible=preemptible)
 
-  def _up(self, name, ip, preemptible, async):
+  def _up(self, name, ip, preemptible, async, tf_version):
     logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
+        f"--range=10.0.{ip}.0/29", f"--version={tf_version}", "--network=default"
     ]
     if preemptible:
       cmd += ["--preemptible"]
@@ -186,14 +186,15 @@ class TPUManager(env.ResourceManager):
     raise Exception(
         f"Failed to create TPU with name: {name} ip: {ip} error: \n{err}")
 
-  def up(self, preemptible=True, async=False, attempts=5):
+  def up(self, tf_version=1.11, preemptible=True, async=False, attempts=5):
     for i in range(attempts):
       try:
         tpu = self._up(
             self._new_name(),
             self._new_ip(),
             preemptible=preemptible,
-            async=async)
+            async=async,
+            tf_version=tf_version)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu
