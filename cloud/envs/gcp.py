@@ -112,6 +112,15 @@ class TPUManager(env.ResourceManager):
     super().__init__(instance, TPU)
     if collect_existing:
       self.collect_existing()
+    
+    try:
+      import tensorflow as tf
+      import re
+      m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
+      self.tf_version = m.group(1)
+    except:
+      logger.warn("Unable to determine Tensorflow version. Assuming 1.12")
+      self.tf_version = "1.12"
 
   @property
   def names(self):
@@ -172,7 +181,7 @@ class TPUManager(env.ResourceManager):
     logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        f"--range=10.0.{ip}.0/29", "--version=1.11", "--network=default"
+        f"--range=10.0.{ip}.0/29", f"--version={self.tf_version}", "--network=default"
     ]
     if preemptible:
       cmd += ["--preemptible"]
