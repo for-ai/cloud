@@ -80,7 +80,8 @@ def try_call(cmd, retry_count=5):
     else:
       logger.debug(f"Call to `{c}` failed with status: {status}. Retrying...")
 
-  raise Exception(f"Call to `{c}` failed {retry_count} times. Aborting. {out}")
+  raise Exception(f"Call to `{c}` failed {retry_count} times."
+                  f"Aborting.\n STDOUT: {stdout}\n STDERR: {stderr}")
 
 
 def config_path():
