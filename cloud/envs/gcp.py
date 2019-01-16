@@ -153,7 +153,9 @@ class TPUManager(env.ResourceManager):
   def collect_existing(self):
     names = self.get_all_tpu_names()
     existing_names = self.names
-    new_tpus = [TPU(name=n) for n in names if n not in existing_names]
+    new_tpus = [
+        TPU(name=n, manager=self) for n in names if n not in existing_names
+    ]
 
     for tpu in new_tpus:
       logger.info(f"Found TPU named {tpu.name}")
@@ -185,7 +187,7 @@ class TPUManager(env.ResourceManager):
     if len(args) == 1:
       arg = args[0]
       if isinstance(arg, str):
-        tpu = TPU(name=arg)
+        tpu = TPU(name=arg, manager=self)
         self.resources.append(tpu)
         return tpu
     return super().add(*args, **kwargs)
