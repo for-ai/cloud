@@ -76,10 +76,18 @@ class TPU(env.Resource):
     return details
 
   @property
+  def still_exists(self):
+    return self.name in self.manager.get_all_tpu_names()
+
+  @property
   def usable(self):
     details = self.details
-    return (details.get("state") in ["READY", "RUNNING"] and
-            details.get("health") == "HEALTHY")
+    if not self.still_exists:
+      self.manager.remove(self)
+      return False
+    is_running = details.get("state") in ["READY", "RUNNING"]
+    is_healthy = details.get("health") == "HEALTHY"
+    return is_running and is_healthy
 
   def up(self, async=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
@@ -98,6 +106,9 @@ class TPU(env.Resource):
   def delete(self, async=True):
     super().delete(async=async)
 
+    if not self.still_exists:
+      return
+
     cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
     if async:
       cmd += ["--async"]
@@ -108,11 +119,8 @@ class TPU(env.Resource):
 
 class TPUManager(env.ResourceManager):
 
-  def __init__(self, instance, collect_existing=True):
+  def __init__(self, instance):
     super().__init__(instance, TPU)
-    if collect_existing:
-      self.collect_existing()
-    
     try:
       import tensorflow as tf
       import re
@@ -121,6 +129,7 @@ class TPUManager(env.ResourceManager):
     except:
       logger.warn("Unable to determine Tensorflow version. Assuming 1.12")
       self.tf_version = "1.12"
+    self.refresh()
 
   @property
   def names(self):
@@ -130,22 +139,33 @@ class TPUManager(env.ResourceManager):
   def ips(self):
     return [r.ip for r in self.resources]
 
-  def collect_existing(self):
+  def get_all_tpu_names(self):
     _, r, _ = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
     lines = r.split("\n")[1:]
     lines = filter(lambda l: l != "", lines)
     names = [l.split()[0] for l in lines]
-    names = filter(lambda n: self.instance.name in n, names)
-    tpus = [TPU(name=n) for n in names]
+    return filter(lambda n: self.instance.name in n, names)
 
-    for tpu in tpus:
+  def refresh(self, async=True):
+    self.collect_existing()
+    self.clean(async=async)
+
+  def collect_existing(self):
+    names = self.get_all_tpu_names()
+    existing_names = self.names
+    new_tpus = [TPU(name=n) for n in names if n not in existing_names]
+
+    for tpu in new_tpus:
       logger.info(f"Found TPU named {tpu.name}")
 
-    self.resources.extend(tpus)
+    self.resources.extend(new_tpus)
 
   def clean(self, async=True):
+    all_tpu_names = self.get_all_tpu_names()
     for tpu in self.resources:
-      if tpu.details.get("health") != "HEALTHY":
+      if tpu.name not in all_tpu_names:
+        self.remove(tpu)
+      elif tpu.details.get("health") != "HEALTHY":
         tpu.delete(async=async)
 
   def _new_name(self, length=5):
@@ -181,7 +201,8 @@ class TPUManager(env.ResourceManager):
     logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        f"--range=10.0.{ip}.0/29", f"--version={self.tf_version}", "--network=default"
+        f"--range=10.0.{ip}.0/29", f"--version={self.tf_version}",
+        "--network=default"
     ]
     if preemptible:
       cmd += ["--preemptible"]
