@@ -28,7 +28,7 @@ class GCPInstance(env.Instance):
     except:
       raise Exception("Missing commandline utility: gcloud")
 
-    self.tpu = TPUManager(self, collect_existing=collect_existing_tpus)
+    self.tpu = TPUManager(self)
     self.resource_managers = [self.tpu]
 
   @property
