@@ -196,6 +196,9 @@ class TPUManager(env.ResourceManager):
     for tpu in self.resources:
       if tpu.usable:
         return tpu
+      
+      if tpu.name == with_name and not tpu.usable:
+        tpu.delete(async=False)
 
     return self.up(preemptible=preemptible, name=with_name)
 
