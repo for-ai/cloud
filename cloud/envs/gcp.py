@@ -192,14 +192,12 @@ class TPUManager(env.ResourceManager):
         return tpu
     return super().add(*args, **kwargs)
 
-  def get(self, preemptible=True, with_name=""):
+  def get(self, preemptible=True, with_name=None):
     for tpu in self.resources:
-      if tpu.usable:
+      if tpu.usable and not with_name or tpu.name == with_name:
         return tpu
       
-      if tpu.name == with_name and not tpu.usable:
-        tpu.delete(async=False)
-
+      
     return self.up(preemptible=preemptible, name=with_name)
 
   def _up(self, name, ip, preemptible, async):
@@ -221,8 +219,8 @@ class TPUManager(env.ResourceManager):
     raise Exception(
         f"Failed to create TPU with name: {name} ip: {ip} error: \n{err}")
 
-  def up(self, preemptible=True, async=False, attempts=5, name=""):
-    if name == "":
+  def up(self, preemptible=True, async=False, attempts=5, name=None):
+    if not name:
       name = self._new_name()
     for i in range(attempts):
       try:
