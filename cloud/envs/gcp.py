@@ -167,7 +167,7 @@ class TPUManager(env.ResourceManager):
     for tpu in self.resources:
       if tpu.name not in all_tpu_names:
         self.remove(tpu)
-      elif tpu.details.get("health") not in ["HEALTHY", None]:
+      elif not tpu.usable:
         tpu.delete(async=async)
 
   def _new_name(self, length=5):
