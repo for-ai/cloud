@@ -86,7 +86,7 @@ class TPU(env.Resource):
       self.manager.remove(self)
       return False
     is_running = details.get("state") in ["READY", "RUNNING"]
-    is_healthy = details.get("health") == "HEALTHY"
+    is_healthy = details.get("health") in ["HEALTHY", None]
     return is_running and is_healthy
 
   def up(self, async=False):
@@ -167,7 +167,7 @@ class TPUManager(env.ResourceManager):
     for tpu in self.resources:
       if tpu.name not in all_tpu_names:
         self.remove(tpu)
-      elif tpu.details.get("health") != "HEALTHY":
+      elif tpu.details.get("health") not in ["HEALTHY", None]:
         tpu.delete(async=async)
 
   def _new_name(self, length=5):
