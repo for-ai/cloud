@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='dl-cloud',
-    version='0.0.8',
+    version='0.0.9',
     description='Cloud resource management for deep learning applications.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -20,7 +20,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.5',
     ],
     keywords='deep learning cloud',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
