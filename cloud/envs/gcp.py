@@ -158,7 +158,7 @@ class TPUManager(env.ResourceManager):
     ]
 
     for tpu in new_tpus:
-      logger.info(f"Found TPU named {tpu.name}")
+      logger.info("Found TPU named {}".format(tpu.name))
 
     self.resources.extend(new_tpus)
 
@@ -196,18 +196,18 @@ class TPUManager(env.ResourceManager):
     for tpu in self.resources:
       if tpu.usable and not name:
         return tpu
-      
+
       if tpu.name == name:
         return tpu
-      
+
     return self.up(preemptible=preemptible, name=name)
 
   def _up(self, name, ip, preemptible, async):
-    logger.info(f"Trying to acquire TPU with name: {name} ip: {ip}")
+    logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        f"--range=10.0.{ip}.0/29", f"--version={self.tf_version}",
-        "--network=default"
+        "--range=10.0.{}.0/29".format(ip), "--version={}".format(
+            self.tf_version), "--network=default"
     ]
     if preemptible:
       cmd += ["--preemptible"]
@@ -219,7 +219,8 @@ class TPUManager(env.ResourceManager):
       return TPU(name=name)
 
     raise Exception(
-        f"Failed to create TPU with name: {name} ip: {ip} error: \n{err}")
+        "Failed to create TPU with name: {} ip: {} error: \n{}".format(
+            name, ip, err))
 
   def up(self, preemptible=True, async=False, attempts=5, name=None):
     if not name:
@@ -227,10 +228,7 @@ class TPUManager(env.ResourceManager):
     for i in range(attempts):
       try:
         tpu = self._up(
-            name,
-            self._new_ip(),
-            preemptible=preemptible,
-            async=async)
+            name, self._new_ip(), preemptible=preemptible, async=async)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu

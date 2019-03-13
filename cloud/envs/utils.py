@@ -75,30 +75,32 @@ def try_call(cmd, retry_count=5):
       c = cmd()
     status, stdout, stderr = call(c)
     if status == 0:
-      logger.debug(f"Call to `{c}` successful")
+      logger.debug("Call to `{}` successful".format(c))
       return c
     else:
-      logger.debug(f"Call to `{c}` failed with status: {status}. Retrying...")
+      logger.debug("Call to `{}` failed with status: {}. Retrying...".format(
+          c, status))
 
-  raise Exception(f"Call to `{c}` failed {retry_count} times."
-                  f"Aborting.\n STDOUT: {stdout}\n STDERR: {stderr}")
+  raise Exception("Call to `{}` failed {} times."
+                  "Aborting.\n STDOUT: {}\n STDERR: {}".format(
+                      c, retry_count, stdout, stderr))
 
 
 def config_path():
   path = os.environ.get("CLOUD_CFG")
   if path is not None and os.path.isfile(path):
     return path
-  logger.warn(f"Unable to find config file at path: {path}")
+  logger.warn("Unable to find config file at path: {}".format(path))
 
   path = os.path.join(os.environ["HOME"], "cloud.toml")
   if os.path.isfile(path):
     return path
-  logger.warn(f"Unable to find config file at path: {path}")
+  logger.warn("Unable to find config file at path: {}".format(path))
 
   path = "/cloud.toml"
   if os.path.isfile(path):
     return path
-  logger.warn(f"Unable to find config file at path: {path}")
+  logger.warn("Unable to find config file at path: {}".format(path))
 
   raise Exception("Configuration file not found in any of the above locations."
                   "\n See cloud/configs for example configurations to fill in "
