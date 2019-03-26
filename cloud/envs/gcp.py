@@ -89,29 +89,29 @@ class TPU(env.Resource):
     is_healthy = details.get("health") in ["HEALTHY", None]
     return is_running and is_healthy
 
-  def up(self, async=False):
+  def up(self, background=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
-    if async:
-      cmd += ["--async"]
+    if background:
+      cmd += ["--background"]
 
     utils.try_call(cmd)
 
-  def down(self, async=True):
+  def down(self, background=True):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
-    if async:
-      cmd += ["--async"]
+    if background:
+      cmd += ["--background"]
 
     utils.try_call(cmd)
 
-  def delete(self, async=True):
-    super().delete(async=async)
+  def delete(self, background=True):
+    super().delete(background=background)
 
     if not self.still_exists:
       return
 
     cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
-    if async:
-      cmd += ["--async"]
+    if background:
+      cmd += ["--background"]
     cmd += ["--quiet"]  # suppress user confirmation
 
     utils.try_call(cmd)
@@ -146,9 +146,9 @@ class TPUManager(env.ResourceManager):
     names = [l.split()[0] for l in lines]
     return filter(lambda n: self.instance.name in n, names)
 
-  def refresh(self, async=True):
+  def refresh(self, background=True):
     self.collect_existing()
-    self.clean(async=async)
+    self.clean(background=background)
 
   def collect_existing(self):
     names = self.get_all_tpu_names()
@@ -162,13 +162,13 @@ class TPUManager(env.ResourceManager):
 
     self.resources.extend(new_tpus)
 
-  def clean(self, async=True):
+  def clean(self, background=True):
     all_tpu_names = self.get_all_tpu_names()
     for tpu in self.resources:
       if tpu.name not in all_tpu_names:
         self.remove(tpu)
       elif not tpu.usable:
-        tpu.delete(async=async)
+        tpu.delete(background=background)
 
   def _new_name(self, length=5):
     while True:
@@ -202,7 +202,7 @@ class TPUManager(env.ResourceManager):
 
     return self.up(preemptible=preemptible, name=name)
 
-  def _up(self, name, ip, preemptible, async):
+  def _up(self, name, ip, preemptible, background):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
@@ -211,8 +211,8 @@ class TPUManager(env.ResourceManager):
     ]
     if preemptible:
       cmd += ["--preemptible"]
-    if async:
-      cmd += ["--async"]
+    if background:
+      cmd += ["--background"]
 
     s, _, err = utils.call(cmd)
     if s == 0:
@@ -222,13 +222,16 @@ class TPUManager(env.ResourceManager):
         "Failed to create TPU with name: {} ip: {} error: \n{}".format(
             name, ip, err))
 
-  def up(self, preemptible=True, async=False, attempts=5, name=None):
+  def up(self, preemptible=True, background=False, attempts=5, name=None):
     if not name:
       name = self._new_name()
     for i in range(attempts):
       try:
         tpu = self._up(
-            name, self._new_ip(), preemptible=preemptible, async=async)
+            name,
+            self._new_ip(),
+            preemptible=preemptible,
+            background=background)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu

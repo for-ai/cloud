@@ -22,13 +22,13 @@ class Resource(object):
   def usable(self):
     return True
 
-  def up(self, async=False):
+  def up(self, background=False):
     raise NotImplementedError
 
-  def down(self, async=True):
+  def down(self, background=True):
     raise NotImplementedError
 
-  def delete(self, async=True):
+  def delete(self, background=True):
     if self.manager:
       self.manager.remove(self)
 
@@ -70,20 +70,20 @@ class Instance(Resource):
 
     return self._node
 
-  def clean(self, async=True, delete_resources=True):
+  def clean(self, background=True, delete_resources=True):
     for rm in self.resource_managers:
       if delete_resources:
-        rm.delete(async=async)
+        rm.delete(background=background)
       else:
-        rm.down(async=async)
+        rm.down(background=background)
 
     self._kill_command_server()
 
-  def down(self, async=True, delete_resources=True):
-    self.clean(async=async, delete_resources=delete_resources)
+  def down(self, background=True, delete_resources=True):
+    self.clean(background=background, delete_resources=delete_resources)
     self.driver.ex_stop_node(self.node)
 
-  def delete(self, async=True, confirm=True):
+  def delete(self, background=True, confirm=True):
     while confirm:
       r = input("Are you sure you wish to delete this instance (y/[n]): ")
 
@@ -93,9 +93,9 @@ class Instance(Resource):
         logger.info("Aborting deletion...")
         return
 
-    super().delete(async=async)
+    super().delete(background=background)
 
-    self.clean(async=async, delete_resources=True)
+    self.clean(background=background, delete_resources=True)
     self.driver.destroy_node(self.node, destroy_boot_disk=True)
 
 
@@ -128,21 +128,21 @@ class ResourceManager(object):
 
     raise NotImplementedError
 
-  def up(self, async=False):
+  def up(self, background=False):
     raise NotImplementedError
 
-  def down(self, async=True):
+  def down(self, background=True):
     for r in self.resources:
       try:
-        r.down(async=async)
+        r.down(background=background)
       except Exception as e:
         logger.error("Failed to shutdown resource: %s" % r)
         logger.error(traceback.format_exc())
 
-  def delete(self, async=True):
+  def delete(self, background=True):
     for r in self.resources:
       try:
-        r.delete(async=async)
+        r.delete(background=background)
       except Exception as e:
         logger.error("Failed to delete resource: %s" % r)
         logger.error(traceback.format_exc())
