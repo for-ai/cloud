@@ -92,14 +92,14 @@ class TPU(env.Resource):
   def up(self, background=False):
     cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
     if background:
-      cmd += ["--background"]
+      cmd += ["--async"]
 
     utils.try_call(cmd)
 
   def down(self, background=True):
     cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
     if background:
-      cmd += ["--background"]
+      cmd += ["--async"]
 
     utils.try_call(cmd)
 
@@ -111,7 +111,7 @@ class TPU(env.Resource):
 
     cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
     if background:
-      cmd += ["--background"]
+      cmd += ["--async"]
     cmd += ["--quiet"]  # suppress user confirmation
 
     utils.try_call(cmd)
@@ -212,7 +212,7 @@ class TPUManager(env.ResourceManager):
     if preemptible:
       cmd += ["--preemptible"]
     if background:
-      cmd += ["--background"]
+      cmd += ["--async"]
 
     s, _, err = utils.call(cmd)
     if s == 0:
