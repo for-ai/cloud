@@ -65,7 +65,7 @@ cloud.connect()
 tpu = cloud.instance.tpu.get(preemptible=True)  # acquire an accelerator
 while True:
   if not tpu.usable:
-    tpu.delete(async=True)  # release the accelerator in the background
+    tpu.delete(background=True)  # release the accelerator in the background
     tpu = cloud.instance.tpu.get(preemptible=True)  # acquire a new accelerator
   else:
     # train your model or w/e
@@ -97,9 +97,9 @@ Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it.
 | `name` | str, name of the instance |
 | `usable ` | bool, whether this resource is usable |
 | **methods** | **desc.** |
-| `up(async=False)` | start an existing stopped resource |
-| `down(async=False)` | stop the resource. Note: this should not necessarily delete this resource |
-| `delete(async=False)` | delete this resource |
+| `up(background=False)` | start an existing stopped resource |
+| `down(background=False)` | stop the resource. Note: this should not necessarily delete this resource |
+| `delete(background=False)` | delete this resource |
 
 ### cloud.Instance(Resource)
 
@@ -109,8 +109,8 @@ An object representing a cloud instance with a set of Resources that can be allo
 | :------- | :------- |
 | `resource_managers` | list of ResourceManagers |
 | **methods** | **desc.** |
-| `down(async=False, delete_resources=True)` | stop this instance and optionally delete all managed resources |
-| `delete(async=False, confirm=True)` | delete this instance with optional user confirmation |
+| `down(background=False, delete_resources=True)` | stop this instance and optionally delete all managed resources |
+| `delete(background=False, confirm=True)` | delete this instance with optional user confirmation |
 
 ### cloud.ResourceManager
 
@@ -164,9 +164,9 @@ Resource class for TPU accelerators.
 | `preemptible` | bool, whether this TPU is preemptible or not |
 | `details` | dict {str: str}, properties of this TPU |
 | **methods** | **desc.** |
-| `up(async=False)` | start this TPU |
-| `down(async=False)` | stop this TPU |
-| `delete(async=False)` | delete this TPU |
+| `up(background=False)` | start this TPU |
+| `down(background=False)` | stop this TPU |
+| `delete(background=False)` | delete this TPU |
 
 ### cloud.TPUManager(ResourceManager)
 
@@ -179,6 +179,6 @@ ResourceManager class for TPU accelerators.
 | **methods** | **desc.** |
 | `__init__(instance, collect_existing=True)` | `instance`: the `cloud.GCPInstance` object operating this TPUManager  |
 |  | `collect_existing`: bool, whether to add existing TPUs to this manager |
-| `clean(async=True)` | delete all managed TPUs with unhealthy states  |
+| `clean(background=True)` | delete all managed TPUs with unhealthy states  |
 | `get(preemptible=True)` | get an available TPU, or create one using `up()` if none exist |
-| `up(preemptible=True, async=False)` | allocate and manage a new instance of `resource_cls ` |
+| `up(preemptible=True, background=False)` | allocate and manage a new instance of `resource_cls ` |
