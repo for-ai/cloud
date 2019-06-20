@@ -210,7 +210,7 @@ class TPUManager(env.ResourceManager):
         return tpu
     return super().add(*args, **kwargs)
 
-  def get(self, preemptible=True, name=None):
+  def get(self, preemptible=True, name=None, version='v3-8'):
     tpu = None
     for tpu in self.resources:
       logger.debug("Considering tpu: {}".format(tpu.name))
@@ -222,15 +222,18 @@ class TPUManager(env.ResourceManager):
         break
     else:
       logger.debug("creating tpu")
-      tpu = self.up(preemptible=preemptible, name=name)
+      if not (version == 'v2-8' or version == 'v3-8'):
+        logger.warning("Invalid TPU version provided. Assuming v3-8")
+        version = 'v3-8'
+      tpu = self.up(preemptible=preemptible, name=name, version=version)
     tpu.in_use()
     return tpu
 
-  def _up(self, name, ip, preemptible, background):
+  def _up(self, name, ip, preemptible, version, background):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        "--range=10.0.{}.0/29".format(ip), "--accelerator-type=v3-8",
+        "--range=10.0.{}.0/29".format(ip), "--accelerator-type={}".format(version),
         "--version={}".format(self.tf_version), "--network=default"
     ]
     if preemptible:
@@ -246,7 +249,7 @@ class TPUManager(env.ResourceManager):
         "Failed to create TPU with name: {} ip: {} error: \n{}".format(
             name, ip, err))
 
-  def up(self, preemptible=True, background=False, attempts=5, name=None):
+  def up(self, preemptible=True, background=False, attempts=5, name=None, version='v3-8'):
     if not name:
       name = self._new_name()
     for i in range(attempts):
@@ -254,6 +257,7 @@ class TPUManager(env.ResourceManager):
         tpu = self._up(name,
                        self._new_ip(),
                        preemptible=preemptible,
+                       version=version,
                        background=background)
         tpu.manager = self
         self.resources.append(tpu)
