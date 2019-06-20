@@ -83,24 +83,25 @@ class TPU(env.Resource):
   @property
   def usable(self):
     if self._in_use:
-      logger.info("tpu {} is marked as in use.".format(self.name))
+      logger.debug("tpu {} is marked as in use.".format(self.name))
       return False
 
     details = self.details
     if not self.still_exists:
-      logger.info("tpu {} no longer exists and will be removed.".format(self.name))
+      logger.debug("tpu {} no longer exists and will be removed.".format(
+          self.name))
       self.manager.remove(self)
       return False
 
     is_running = details.get("state") in ["READY", "RUNNING"]
     is_healthy = details.get("health") in ["HEALTHY", None]
-    
+
     if not is_running:
-      logger.info("tpu {} is no longer running.".format(self.name))
+      logger.debug("tpu {} is no longer running.".format(self.name))
 
     if not is_healthy:
-      logger.info("tpu {} is no longer healthy.".format(self.name))
-   
+      logger.debug("tpu {} is no longer healthy.".format(self.name))
+
     return is_running and is_healthy
 
   def up(self, background=False):
@@ -133,6 +134,7 @@ class TPU(env.Resource):
   def in_use(self):
     self._in_use = True
 
+
 class TPUManager(env.ResourceManager):
 
   def __init__(self, instance):
@@ -143,8 +145,8 @@ class TPUManager(env.ResourceManager):
       m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
       self.tf_version = m.group(1)
     except:
-      logger.warn("Unable to determine Tensorflow version. Assuming 1.12")
-      self.tf_version = "1.12"
+      logger.warn("Unable to determine Tensorflow version. Assuming 1.13")
+      self.tf_version = "1.13"
     self.refresh()
 
   @property
@@ -174,7 +176,7 @@ class TPUManager(env.ResourceManager):
     ]
 
     for tpu in new_tpus:
-      logger.info("Found TPU named {}".format(tpu.name))
+      logger.debug("Found TPU named {}".format(tpu.name))
 
     self.resources.extend(new_tpus)
 
@@ -211,15 +213,15 @@ class TPUManager(env.ResourceManager):
   def get(self, preemptible=True, name=None):
     tpu = None
     for tpu in self.resources:
-      logger.info("Considering tpu: {}".format(tpu.name))
+      logger.debug("Considering tpu: {}".format(tpu.name))
       if tpu.usable and not name:
-        logger.info("tpu usable")
+        logger.debug("tpu usable")
         break
 
       if tpu.name == name:
         break
     else:
-      logger.info("creating tpu")
+      logger.debug("creating tpu")
       tpu = self.up(preemptible=preemptible, name=name)
     tpu.in_use()
     return tpu
@@ -228,8 +230,8 @@ class TPUManager(env.ResourceManager):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        "--range=10.0.{}.0/29".format(ip), "--accelerator-type=v3-8", "--version={}".format(
-            self.tf_version), "--network=default"
+        "--range=10.0.{}.0/29".format(ip), "--accelerator-type=v3-8",
+        "--version={}".format(self.tf_version), "--network=default"
     ]
     if preemptible:
       cmd += ["--preemptible"]
@@ -249,11 +251,10 @@ class TPUManager(env.ResourceManager):
       name = self._new_name()
     for i in range(attempts):
       try:
-        tpu = self._up(
-            name,
-            self._new_ip(),
-            preemptible=preemptible,
-            background=background)
+        tpu = self._up(name,
+                       self._new_ip(),
+                       preemptible=preemptible,
+                       background=background)
         tpu.manager = self
         self.resources.append(tpu)
         return tpu
