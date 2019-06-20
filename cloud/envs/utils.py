@@ -90,17 +90,17 @@ def config_path():
   path = os.environ.get("CLOUD_CFG")
   if path is not None and os.path.isfile(path):
     return path
-  logger.warn("Unable to find config file at path: {}".format(path))
+  logger.debug("Unable to find config file at path: {}".format(path))
 
   path = os.path.join(os.environ["HOME"], "cloud.toml")
   if os.path.isfile(path):
     return path
-  logger.warn("Unable to find config file at path: {}".format(path))
+  logger.debug("Unable to find config file at path: {}".format(path))
 
   path = "/cloud.toml"
   if os.path.isfile(path):
     return path
-  logger.warn("Unable to find config file at path: {}".format(path))
+  logger.debug("Unable to find config file at path: {}".format(path))
 
   raise Exception("Configuration file not found in any of the above locations."
                   "\n See cloud/configs for example configurations to fill in "

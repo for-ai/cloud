@@ -7,6 +7,8 @@ handler = logging.StreamHandler(sys.stderr)
 handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
 logger.addHandler(handler)
 
+logging.getLogger("errand_boy").setLevel(logging.WARNING)
+
 from cloud.envs import registry
 
 from cloud.envs import env
