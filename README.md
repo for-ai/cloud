@@ -1,9 +1,11 @@
-# Cloud Utilities for Deep Learning ⛅️
+# Cloud Utilities for Deep Learning ⛅️ 
 
 A super lightweight cloud management tool designed with deep learning applications in mind.
 
+
 **Built with the belief that managing cloud resources should be as easy as:**
-```
+
+```python
 import cloud
 
 cloud.connect()
@@ -27,11 +29,11 @@ We welcome all contributions, suggestions, and use-cases. Reach out to us over G
 
 ### Install:
 Sort of stable:
-```
+```python
 sudo pip install dl-cloud
 ```
 Bleeding edge:
-```
+```python
 git clone git@github.com:for-ai/cloud.git
 sudo pip install -e cloud
 ```
@@ -81,6 +83,7 @@ cloud.down()  # release all resources, then stop the instance (does not delete i
 Takes/Creates a `cloud.Instance` object and sets `cloud.instance` to it. 
 
 | **returns** | **desc.** |
+| :------- | :------- |
 | cloud_env | a cloud.Instance.  |
 
 ### cloud.down()
