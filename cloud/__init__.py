@@ -8,6 +8,8 @@ handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT, None))
 logger.addHandler(handler)
 
 logging.getLogger("errand_boy").setLevel(logging.WARNING)
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+logging.getLogger('googleapiclient.discovery').setLevel(logging.CRITICAL)
 
 from cloud.envs import registry
 
