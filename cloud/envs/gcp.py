@@ -230,7 +230,7 @@ class TPUManager(env.ResourceManager):
     return tpu
 
   def _up(self, name, ip, preemptible, version, background):
-    logger.debug("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
+    logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
         "--range=10.0.{}.0/29".format(ip), "--accelerator-type={}".format(version),
