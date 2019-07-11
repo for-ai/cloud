@@ -81,11 +81,11 @@ class TPU(env.Resource):
     return self.name in self.manager.get_all_tpu_names()
 
   @property
-  def usable(self):
-    if self._in_use:
-      logger.debug("tpu {} is marked as in use.".format(self.name))
-      return False
+  def free(self):
+    return not self._in_use
 
+  @property
+  def usable(self):
     details = self.details
     if not self.still_exists:
       logger.debug("tpu {} no longer exists and will be removed.".format(
@@ -214,7 +214,7 @@ class TPUManager(env.ResourceManager):
     tpu = None
     for tpu in self.resources:
       logger.debug("Considering tpu: {}".format(tpu.name))
-      if tpu.usable and not name:
+      if tpu.usable and tpu.free and not name:
         logger.debug("tpu usable")
         break
 
@@ -233,7 +233,8 @@ class TPUManager(env.ResourceManager):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        "--range=10.0.{}.0/29".format(ip), "--accelerator-type={}".format(version),
+        "--range=10.0.{}.0/29".format(ip),
+        "--accelerator-type={}".format(version),
         "--version={}".format(self.tf_version), "--network=default"
     ]
     if preemptible:
@@ -249,7 +250,12 @@ class TPUManager(env.ResourceManager):
         "Failed to create TPU with name: {} ip: {} error: \n{}".format(
             name, ip, err))
 
-  def up(self, preemptible=True, background=False, attempts=5, name=None, version='v3-8'):
+  def up(self,
+         preemptible=True,
+         background=False,
+         attempts=5,
+         name=None,
+         version='v3-8'):
     if not name:
       name = self._new_name()
     for i in range(attempts):
