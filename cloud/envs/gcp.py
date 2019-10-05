@@ -225,7 +225,10 @@ class TPUManager(env.ResourceManager):
       if not (version == 'v2-8' or version == 'v3-8'):
         logger.warning("Invalid TPU version provided. Assuming v3-8")
         version = 'v3-8'
-      tpu = self.up(preemptible=preemptible, name=name, version=version)
+      tpu = self.up(preemptible=preemptible,
+                    name=name,
+                    version=version,
+                    zone=zone)
     tpu.in_use()
     return tpu
 
