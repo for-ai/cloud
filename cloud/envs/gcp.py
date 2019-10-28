@@ -210,7 +210,7 @@ class TPUManager(env.ResourceManager):
         return tpu
     return super().add(*args, **kwargs)
 
-  def get(self, preemptible=True, name=None, version='v3-8'):
+  def get(self, preemptible=True, name=None, version='v3-8', zone=None):
     tpu = None
     for tpu in self.resources:
       logger.debug("Considering tpu: {}".format(tpu.name))
@@ -225,11 +225,14 @@ class TPUManager(env.ResourceManager):
       if not (version == 'v2-8' or version == 'v3-8'):
         logger.warning("Invalid TPU version provided. Assuming v3-8")
         version = 'v3-8'
-      tpu = self.up(preemptible=preemptible, name=name, version=version)
+      tpu = self.up(preemptible=preemptible,
+                    name=name,
+                    version=version,
+                    zone=zone)
     tpu.in_use()
     return tpu
 
-  def _up(self, name, ip, preemptible, version, background):
+  def _up(self, name, ip, preemptible, version, zone, background):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
@@ -237,6 +240,8 @@ class TPUManager(env.ResourceManager):
         "--accelerator-type={}".format(version),
         "--version={}".format(self.tf_version), "--network=default"
     ]
+    if zone:
+      cmd += ["--zone={}".format(zone)]
     if preemptible:
       cmd += ["--preemptible"]
     if background:
@@ -255,7 +260,8 @@ class TPUManager(env.ResourceManager):
          background=False,
          attempts=5,
          name=None,
-         version='v3-8'):
+         version='v3-8',
+         zone=None):
     if not name:
       name = self._new_name()
     for i in range(attempts):
@@ -264,6 +270,7 @@ class TPUManager(env.ResourceManager):
                        self._new_ip(),
                        preemptible=preemptible,
                        version=version,
+                       zone=zone,
                        background=background)
         tpu.manager = self
         self.resources.append(tpu)
