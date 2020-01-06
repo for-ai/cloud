@@ -1,17 +1,16 @@
 import logging
 import random
 import re
+import socket
 import string
 import subprocess
-import requests
+
 import numpy as np
-
-from libcloud.compute.types import Provider
+import requests
 from libcloud.compute.providers import get_driver
+from libcloud.compute.types import Provider
 
-from cloud.envs import env
-from cloud.envs import registry
-from cloud.envs import utils
+from cloud.envs import env, registry, utils
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +55,7 @@ class TPU(env.Resource):
     details = self.details
     self.ip = details.get("ipAddress")
     self.preemptible = details.get("preemptible") == "true"
+    self.version = details.get("acceleratorType")
     self._in_use = False
 
   @property
@@ -64,8 +64,10 @@ class TPU(env.Resource):
 
   @property
   def details(self):
-    _, r, _ = utils.call(
-        ["gcloud", "alpha", "compute", "tpus", "describe", self.name])
+    _, r, _ = utils.call([
+        "gcloud", "alpha", "compute", "tpus", "describe",
+        "--zone={}".format(self.manager.zone), self.name
+    ])
     r = r.split("\n")
     details = dict()
     for line in r:
@@ -105,14 +107,20 @@ class TPU(env.Resource):
     return is_running and is_healthy
 
   def up(self, background=False):
-    cmd = ["gcloud", "alpha", "compute", "tpus", "start", self.name]
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "start",
+        "--zone={}".format(self.manager.zone), self.name
+    ]
     if background:
       cmd += ["--async"]
 
     utils.try_call(cmd)
 
   def down(self, background=True):
-    cmd = ["gcloud", "alpha", "compute", "tpus", "stop", self.name]
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "stop",
+        "--zone={}".format(self.manager.zone), self.name
+    ]
     if background:
       cmd += ["--async"]
 
@@ -124,7 +132,10 @@ class TPU(env.Resource):
     if not self.still_exists:
       return
 
-    cmd = ["gcloud", "alpha", "compute", "tpus", "delete", self.name]
+    cmd = [
+        "gcloud", "alpha", "compute", "tpus", "delete",
+        "--zone={}".format(self.manager.zone), self.name
+    ]
     if background:
       cmd += ["--async"]
     cmd += ["--quiet"]  # suppress user confirmation
@@ -133,6 +144,9 @@ class TPU(env.Resource):
 
   def in_use(self):
     self._in_use = True
+
+  def release(self):
+    self._in_use = False
 
 
 class TPUManager(env.ResourceManager):
@@ -145,8 +159,16 @@ class TPUManager(env.ResourceManager):
       m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
       self.tf_version = m.group(1)
     except:
-      logger.warn("Unable to determine Tensorflow version. Assuming 1.13")
-      self.tf_version = "1.13"
+      logger.warn("Unable to determine Tensorflow version. Assuming 1.15")
+      self.tf_version = "1.15"
+    self.hostname = socket.gethostname()
+    _, r, _ = utils.call([
+        "gcloud", "compute", "instances", "list",
+        "--filter=\"name={}\"".format(self.hostname)
+    ])
+    lines = r.split("\n")[1:]
+    lines = list(filter(lambda l: l != "", lines))
+    self.zone = lines[0].split()[1]
     self.refresh()
 
   @property
@@ -158,7 +180,10 @@ class TPUManager(env.ResourceManager):
     return [r.ip for r in self.resources]
 
   def get_all_tpu_names(self):
-    _, r, _ = utils.call(["gcloud", "alpha", "compute", "tpus", "list"])
+    _, r, _ = utils.call([
+        "gcloud", "alpha", "compute", "tpus", "list",
+        "--zone={}".format(self.zone)
+    ])
     lines = r.split("\n")[1:]
     lines = filter(lambda l: l != "", lines)
     names = [l.split()[0] for l in lines]
@@ -212,9 +237,10 @@ class TPUManager(env.ResourceManager):
 
   def get(self, preemptible=True, name=None, version='v3-8', zone=None):
     tpu = None
+    assert re.match(r"v\d-\d+", version)
     for tpu in self.resources:
       logger.debug("Considering tpu: {}".format(tpu.name))
-      if tpu.usable and tpu.free and not name:
+      if tpu.version == version and tpu.usable and tpu.free and not name:
         logger.debug("tpu usable")
         break
 
@@ -222,9 +248,6 @@ class TPUManager(env.ResourceManager):
         break
     else:
       logger.debug("creating tpu")
-      if not (version == 'v2-8' or version == 'v3-8'):
-        logger.warning("Invalid TPU version provided. Assuming v3-8")
-        version = 'v3-8'
       tpu = self.up(preemptible=preemptible,
                     name=name,
                     version=version,
@@ -249,7 +272,7 @@ class TPUManager(env.ResourceManager):
 
     s, _, err = utils.call(cmd)
     if s == 0:
-      return TPU(name=name)
+      return TPU(name=name, manager=self)
 
     raise Exception(
         "Failed to create TPU with name: {} ip: {} error: \n{}".format(
@@ -276,6 +299,7 @@ class TPUManager(env.ResourceManager):
         self.resources.append(tpu)
         return tpu
       except Exception as e:
+        logger.debug("Call resulted in error:\n{}".format(e))
         if i + 1 == attempts:
           raise e
         continue
