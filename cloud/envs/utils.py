@@ -4,8 +4,8 @@ import os
 import subprocess
 import time
 
-from errand_boy.transports.unixsocket import UNIXSocketTransport
 from errand_boy.run import main as eb_main
+from errand_boy.transports.unixsocket import UNIXSocketTransport
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,4 @@ def config_path():
     return path
   logger.debug("Unable to find config file at path: {}".format(path))
 
-  raise Exception("Configuration file not found in any of the above locations."
-                  "\n See cloud/configs for example configurations to fill in "
-                  "and use; copy and place in a file named `cloud.toml` at "
-                  "`/cloud.toml` or `$HOME/cloud.toml`.")
+  return None
