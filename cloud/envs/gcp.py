@@ -158,6 +158,9 @@ class TPUManager(env.ResourceManager):
       import re
       m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
       self.tf_version = m.group(1)
+      if self.tf_version[0] == "2":
+        logger.info("Found Tensorflow version 2.x. Using nightly")
+        self.tf_version = "nightly-2.x"
     except:
       logger.warn("Unable to determine Tensorflow version. Assuming 1.15")
       self.tf_version = "1.15"
@@ -259,7 +262,7 @@ class TPUManager(env.ResourceManager):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        "--range=10.0.{}.0/29".format(ip),
+        "--range=10.0.{}.0".format(ip),
         "--accelerator-type={}".format(version),
         "--version={}".format(self.tf_version), "--network=default"
     ]
