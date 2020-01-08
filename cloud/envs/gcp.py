@@ -262,7 +262,7 @@ class TPUManager(env.ResourceManager):
     logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
     cmd = [
         "gcloud", "alpha", "compute", "tpus", "create", name,
-        "--range=10.0.{}.0/29".format(ip),
+        "--range=10.0.{}.0".format(ip),
         "--accelerator-type={}".format(version),
         "--version={}".format(self.tf_version), "--network=default"
     ]
