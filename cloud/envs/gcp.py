@@ -24,8 +24,8 @@ class GCPInstance(env.Instance):
     # Check for dependencies
     try:
       utils.call(["gcloud", "--version"])
-    except:
-      raise Exception("Missing commandline utility: gcloud")
+    except Exception as e:
+      print(e)
 
     self.tpu = TPUManager(self)
     self.resource_managers = [self.tpu]
