@@ -25,7 +25,7 @@ class GCPInstance(env.Instance):
     try:
       utils.call(["gcloud", "--version"])
     except Exception as e:
-      print(e)
+      raise(e)
 
     self.tpu = TPUManager(self)
     self.resource_managers = [self.tpu]
