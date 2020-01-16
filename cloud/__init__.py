@@ -29,6 +29,8 @@ from cloud.envs.gcp import GCPInstance
 from cloud.envs.gcp import TPU
 from cloud.envs.gcp import TPUManager
 
+from cloud.envs import nop
+
 from cloud.cloud import close
 from cloud.cloud import connect
 from cloud.cloud import down
