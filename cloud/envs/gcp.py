@@ -159,8 +159,8 @@ class TPUManager(env.ResourceManager):
       m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
       self.tf_version = m.group(1)
       if self.tf_version[0] == "2":
-        logger.info("Found Tensorflow version 2.x. Using nightly")
-        self.tf_version = "nightly-2.x"
+        logger.info("Found Tensorflow version 2.x. Using TPU software version 2.1")
+        self.tf_version = "2.1"
     except:
       logger.warn("Unable to determine Tensorflow version. Assuming 1.15")
       self.tf_version = "1.15"
