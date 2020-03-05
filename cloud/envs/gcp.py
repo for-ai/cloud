@@ -161,9 +161,6 @@ class TPUManager(env.ResourceManager):
       if "dev" in tf.__version__:
         logging.info("Found Tensorflow nightly version. Using TPU software version: nightly")
         self.tf_version = "nightly"
-      elif self.tf_version[0] == "2":
-        logging.info("Found Tensorflow version 2.x. Using TPU software version: 2.1")
-        self.tf_version = "2.1"
     except:
       logger.warn("Unable to determine Tensorflow version. Assuming 1.15")
       self.tf_version = "1.15"
