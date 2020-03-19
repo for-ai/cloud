@@ -11,6 +11,8 @@ logging.getLogger("errand_boy").setLevel(logging.WARNING)
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 logging.getLogger('googleapiclient.discovery').setLevel(logging.CRITICAL)
 
+socket_path = None
+
 from cloud.envs import registry
 
 from cloud.envs import env

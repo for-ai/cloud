@@ -6,10 +6,10 @@ here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
-  long_description = f.read()
+    long_description = f.read()
 
 setup(name='dl-cloud',
-      version='0.1.7',
+      version='0.1.8',
       description='Cloud resource management for deep learning applications.',
       long_description=long_description,
       long_description_content_type='text/markdown',
