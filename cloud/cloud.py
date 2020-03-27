@@ -13,7 +13,7 @@ from cloud.envs import utils
 logger = logging.getLogger(__name__)
 
 
-def connect(socket_path=None):
+def connect(socket_path="/tmp/cloud_socket"):
     config_filepath = utils.config_path()
     if config_filepath is None:
         logger.error("ASSUMING LOCAL: Configuration file not found in any of the locations"
