@@ -1,12 +1,17 @@
+import json
 import logging
+import os
 import random
 import re
 import socket
 import string
 import subprocess
+from pathlib import Path
 
 import numpy as np
+import psutil
 import requests
+from filelock import FileLock
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
 
@@ -81,7 +86,7 @@ class TPU(env.Resource):
 
     @property
     def free(self):
-        return not self._in_use
+        return not self._in_use and not self.manager.lockfile.check_if_in_use(self)
 
     @property
     def usable(self):
@@ -131,9 +136,73 @@ class TPU(env.Resource):
 
     def in_use(self):
         self._in_use = True
+        self.manager.lockfile.register_in_use(self)
 
     def release(self):
+        assert self._in_use
         self._in_use = False
+        self.manager.lockfile.register_free(self)
+
+
+class TPULockFile:
+
+    def __init__(self, filepath):
+        self.filepath = Path(filepath).expanduser()
+        self.lockpath = Path(filepath + ".lock").expanduser()
+        self.filelock = FileLock(self.lockpath)
+
+        if not self.filepath.exists():
+            self.filepath.touch()
+        if not self.lockpath.exists():
+            self.lockpath.touch()
+
+    def _write_registry(self, registry):
+        f = open(self.filepath, "w")
+        f.write(json.dumps(registry))
+        f.close()
+
+    def register_free(self, tpu):
+        with self.filelock:
+            f = open(self.filepath, "r")
+            f_raw = f.read()
+            tpu_registry = json.loads(f_raw) if f_raw else {}
+            if tpu.name not in tpu_registry:
+                return
+
+            del tpu_registry[tpu.name]
+            f.close()
+            self._write_registry(tpu_registry)
+
+    def register_in_use(self, tpu):
+        with self.filelock:
+            f = open(self.filepath, "r")
+            f_raw = f.read()
+            tpu_registry = json.loads(f_raw) if f_raw else {}
+            if tpu.name in tpu_registry:
+                if os.getpid() == tpu_registry[tpu.name]:
+                    pass
+                elif psutil.pid_exists(tpu_registry[tpu.name]):
+                    raise Exception("TPU is already registered")
+                else:
+                    logger.warn(f"Forcefully acquiring TPU {tpu.name} from dead pid {tpu_registry[tpu.name]}.")
+            tpu_registry[tpu.name] = os.getpid()
+            f.close()
+            self._write_registry(tpu_registry)
+
+    def check_if_in_use(self, tpu):
+        with self.filelock:
+            f = open(self.filepath, "r")
+            f_raw = f.read()
+            tpu_registry = json.loads(f_raw) if f_raw else {}
+            if tpu.name in tpu_registry:
+                if psutil.pid_exists(tpu_registry[tpu.name]):
+                    return True
+                else:
+                    logger.warn(f"Removing TPU {tpu.name} from dead pid {tpu_registry[tpu.name]}.")
+                    del tpu_registry[tpu.name]
+                    self._write_registry(tpu_registry)
+
+            return False
 
 
 class TPUManager(env.ResourceManager):
@@ -156,6 +225,8 @@ class TPUManager(env.ResourceManager):
         lines = r.split("\n")[1:]
         lines = list(filter(lambda l: l != "", lines))
         self.zone = lines[0].split()[1]
+        from cloud import socket_path
+        self.lockfile = TPULockFile(os.path.join("~", ".tpu_registry"))
         self.refresh()
 
     @property
