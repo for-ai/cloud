@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='dl-cloud',
-      version='0.1.9',
+      version='0.1.10',
       description='Cloud resource management for deep learning applications.',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -24,4 +24,4 @@ setup(name='dl-cloud',
       ],
       keywords='deep learning cloud',
       packages=find_packages(exclude=['contrib', 'docs', 'tests']),
-      install_requires=['numpy', 'apache-libcloud', 'toml', "errand-boy"])
+      install_requires=['numpy', 'apache-libcloud', 'toml', "errand-boy", "filelock", "pathlib"])
