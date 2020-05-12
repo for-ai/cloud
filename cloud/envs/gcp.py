@@ -161,6 +161,18 @@ class TPULockFile:
         f.write(json.dumps(registry))
         f.close()
 
+    def clean(self):
+        with self.filelock:
+            f = open(self.filepath, "r")
+            f_raw = f.read()
+            f.close()
+
+        tpu_registry = json.loads(f_raw) if f_raw else {}
+        for tpu_name in tpu_registry:
+            in_use = self._check_if_in_use(tpu_name)
+            logger.debug(f"TPU {tpu_name}{' not' if not in_use else ''} in use."
+                         f"{' Deleting from registry...' if not in_use else ''}")
+
     def register_free(self, tpu):
         with self.filelock:
             f = open(self.filepath, "r")
@@ -190,16 +202,19 @@ class TPULockFile:
             self._write_registry(tpu_registry)
 
     def check_if_in_use(self, tpu):
+        return self._check_if_in_use(tpu.name)
+
+    def _check_if_in_use(self, tpu_name):
         with self.filelock:
             f = open(self.filepath, "r")
             f_raw = f.read()
             tpu_registry = json.loads(f_raw) if f_raw else {}
-            if tpu.name in tpu_registry:
-                if psutil.pid_exists(tpu_registry[tpu.name]):
+            if tpu_name in tpu_registry:
+                if psutil.pid_exists(tpu_registry[tpu_name]):
                     return True
                 else:
-                    logger.warn(f"Removing TPU {tpu.name} from dead pid {tpu_registry[tpu.name]}.")
-                    del tpu_registry[tpu.name]
+                    logger.warn(f"Removing TPU {tpu_name} from dead pid {tpu_registry[tpu_name]}.")
+                    del tpu_registry[tpu_name]
                     self._write_registry(tpu_registry)
 
             return False
@@ -247,6 +262,7 @@ class TPUManager(env.ResourceManager):
     def refresh(self, background=True):
         self.collect_existing()
         self.clean(background=background)
+        self.lockfile.clean()
 
     def collect_existing(self):
         names = self.get_all_tpu_names()
