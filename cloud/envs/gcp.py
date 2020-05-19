@@ -79,7 +79,7 @@ class TPU(env.Resource):
     @property
     def details(self):
         _, r, _ = utils.call(
-            ["gcloud", "alpha", "compute", "tpus", "describe", "--zone={}".format(self.manager.zone), self.name])
+            ["gcloud", "compute", "tpus", "describe", "--zone={}".format(self.manager.zone), self.name])
         r = r.split("\n")
         details = dict()
         for line in r:
