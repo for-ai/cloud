@@ -108,14 +108,14 @@ class TPU(env.Resource):
         return is_running and is_healthy
 
     def up(self, background=False):
-        cmd = ["gcloud", "alpha", "compute", "tpus", "start", "--zone={}".format(self.manager.zone), self.name]
+        cmd = ["gcloud", "compute", "tpus", "start", "--zone={}".format(self.manager.zone), self.name]
         if background:
             cmd += ["--async"]
 
         utils.try_call(cmd)
 
     def down(self, background=True):
-        cmd = ["gcloud", "alpha", "compute", "tpus", "stop", "--zone={}".format(self.manager.zone), self.name]
+        cmd = ["gcloud", "compute", "tpus", "stop", "--zone={}".format(self.manager.zone), self.name]
         if background:
             cmd += ["--async"]
 
@@ -127,7 +127,7 @@ class TPU(env.Resource):
         if not self.still_exists:
             return
 
-        cmd = ["gcloud", "alpha", "compute", "tpus", "delete", "--zone={}".format(self.manager.zone), self.name]
+        cmd = ["gcloud", "compute", "tpus", "delete", "--zone={}".format(self.manager.zone), self.name]
         if background:
             cmd += ["--async"]
         cmd += ["--quiet"]  # suppress user confirmation
