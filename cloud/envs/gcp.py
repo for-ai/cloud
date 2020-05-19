@@ -45,9 +45,19 @@ class GCPInstance(env.Instance):
         return self._driver
 
     @property
+    def zone(self):
+        if getattr(self, '_zone', None) is None:
+            r = requests.get("http://metadata.google.internal/computeMetadata/v1/instance/zone",
+                             headers={"Metadata-Flavor": "Google"})
+            self._zone = r.text
+        return self._zone
+
+    @property
     def name(self):
         if getattr(self, '_name', None) is None:
-            self._name = utils.call(["hostname"])[1].strip()
+            r = requests.get("http://metadata.google.internal/computeMetadata/v1/instance/name",
+                             headers={"Metadata-Flavor": "Google"})
+            self._name = r.text
         return self._name
 
 
@@ -220,11 +230,10 @@ class TPUManager(env.ResourceManager):
         except:
             logger.warn("Unable to determine Tensorflow version. Assuming 1.15")
             self.tf_version = "1.15"
+
         self.hostname = socket.gethostname()
-        _, r, _ = utils.call(["gcloud", "compute", "instances", "list", "--filter=\"name={}\"".format(self.hostname)])
-        lines = r.split("\n")[1:]
-        lines = list(filter(lambda l: l != "", lines))
-        self.zone = lines[0].split()[1]
+        self.zone = instance.zone.split('/')[-1]
+
         from cloud import socket_path
         self.lockfile = TPULockFile(os.path.join("~", ".tpu_registry"))
         self.refresh()
@@ -238,7 +247,7 @@ class TPUManager(env.ResourceManager):
         return [r.ip for r in self.resources]
 
     def get_all_tpu_names(self):
-        _, r, _ = utils.call(["gcloud", "alpha", "compute", "tpus", "list", "--zone={}".format(self.zone)])
+        _, r, _ = utils.call(["gcloud", "compute", "tpus", "list", "--zone={}".format(self.zone)])
         lines = r.split("\n")[1:]
         lines = filter(lambda l: l != "", lines)
         names = [l.split()[0] for l in lines]
@@ -308,7 +317,7 @@ class TPUManager(env.ResourceManager):
     def _up(self, name, ip, preemptible, version, zone, background):
         logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
         cmd = [
-            "gcloud", "alpha", "compute", "tpus", "create", name, "--range=10.0.{}.0".format(ip),
+            "gcloud", "compute", "tpus", "create", name, "--range=10.0.{}.0".format(ip),
             "--accelerator-type={}".format(version), "--version={}".format(self.tf_version), "--network=default"
         ]
         if zone:
