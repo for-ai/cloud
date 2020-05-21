@@ -44,6 +44,12 @@ See `configs/cloud.toml-*` for instructions on how to authenticate for each prov
 
 Place your completed configuration file (named `cloud.toml`) in either root `/` or `$HOME`. Otherwise, provide a full path to the file in `$CLOUD_CFG`.
 
+If you use GCP as a provider for your `cloud.toml` it will use GCP Instance metadata APIs to fetch APIs. If you want to configure for Google Cloud Build, please use; 
+```toml
+is_gcb = true
+zone = '{{DESIRED_ZONE}}' 
+```
+
 ### Usage:
 #### GPU
 ```python
