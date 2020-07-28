@@ -32,7 +32,7 @@ class GCPInstance(env.Instance):
         except Exception as e:
             raise (e)
 
-        if kwargs['config'].get(['is_gcb'], False):
+        if kwargs['config'].get('is_gcb', False):
             self._name = "cloud-build"
             self._zone = kwargs['config']['zone']
 
