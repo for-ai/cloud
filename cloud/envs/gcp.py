@@ -288,7 +288,7 @@ class TPUManager(env.ResourceManager):
 
     def _new_ip(self):
         while True:
-            ip = random.randint(1, 98)
+            ip = "10.{}.{}.0".format(random.randint(1, 98), random.randint(1, 98))
             if ip not in self.ips:
                 return ip
 
@@ -321,7 +321,7 @@ class TPUManager(env.ResourceManager):
     def _up(self, name, ip, preemptible, version, zone, background):
         logger.info("Trying to acquire TPU with name: {} ip: {}".format(name, ip))
         cmd = [
-            "gcloud", "compute", "tpus", "create", name, "--range=10.0.{}.0".format(ip),
+            "gcloud", "compute", "tpus", "create", name, "--range={}".format(ip),
             "--accelerator-type={}".format(version), "--version={}".format(self.tf_version), "--network=default"
         ]
         if zone:
