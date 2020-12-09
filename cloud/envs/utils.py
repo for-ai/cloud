@@ -80,7 +80,7 @@ def try_call(cmd, retry_count=5):
             logger.debug("Call to `{}` successful".format(c))
             return c
         else:
-            logger.debug("Call to `{}` failed with status: {}. Retrying...".format(c, status))
+            logger.info("Call to `{}` failed with status: {}. Retrying...\n STDOUT: {}\n STDERR: {}".format(c, status, stdout, stderr))
 
     raise Exception("Call to `{}` failed {} times."
                     "Aborting.\n STDOUT: {}\n STDERR: {}".format(c, retry_count, stdout, stderr))
