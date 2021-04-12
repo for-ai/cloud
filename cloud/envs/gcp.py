@@ -227,7 +227,11 @@ class TPUManager(env.ResourceManager):
             import tensorflow as tf
             import re
             m = re.search(r'(\d+\.\d+)\.\d+', tf.__version__)
-            self.tf_version = m.group(1)
+            self.core_tf_version = m.group(1)
+            if float(self.core_tf_version) <= 2.3:
+                self.tf_version = m.group(1)
+            else:
+                self.tf_version = m.group()
             if "dev" in tf.__version__:
                 logging.info("Found Tensorflow nightly version. Using TPU software version: nightly")
                 self.tf_version = "nightly"
