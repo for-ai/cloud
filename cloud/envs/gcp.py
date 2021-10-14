@@ -305,7 +305,7 @@ class TPUManager(env.ResourceManager):
                 return tpu
         return super().add(*args, **kwargs)
 
-    def get(self, preemptible=True, name=None, version='v3-8', zone=None):
+    def get(self, mode='preemptible', name=None, version='v3-8', zone=None, tpu_type='tpu-node'):
         tpu = None
         assert re.match(r"v\d-\d+", version)
         for tpu in self.resources:
@@ -318,7 +318,7 @@ class TPUManager(env.ResourceManager):
                 break
         else:
             logger.debug("creating tpu")
-            tpu = self.up(preemptible=preemptible, name=name, version=version, zone=zone)
+            tpu = self.up(mode=mode, name=name, version=version, zone=zone, tpu_type=tpu_type)
         tpu.in_use()
         return tpu
 
