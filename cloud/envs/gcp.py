@@ -345,7 +345,7 @@ class TPUManager(env.ResourceManager):
 
         raise Exception("Failed to create TPU with name: {} ip: {} error: \n{}".format(name, ip, err))
 
-    def up(self, mode='preemptible', background=False, attempts=5, name=None, version='v3-8', zone=None, tpu_type='tpu_node'):
+    def up(self, mode='preemptible', background=False, attempts=5, name=None, version='v3-8', zone=None, tpu_type='tpu-node'):
         if not name:
             name = self._new_name()
         for i in range(attempts):
